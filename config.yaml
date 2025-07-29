@@ -1,0 +1,150 @@
+categories:
+  terminals:
+    alacritty:
+      display_name: "Alacritty Terminal"
+      binary_name: "alacritty"
+      install_method: "manual"
+      package_name: ""
+      install_script: ""
+      config_path: "~/.config/alacritty/alacritty.yml"
+      config_template: ""
+      dependencies: []
+      wsl_notes: "Install Alacritty on Windows host system. Download from https://github.com/alacritty/alacritty/releases"
+
+  multiplexers:
+    tmux:
+      display_name: "Tmux Terminal Multiplexer"
+      binary_name: "tmux"
+      install_method: "apt"
+      package_name: "tmux"
+      install_script: ""
+      config_path: "~/.tmux.conf"
+      config_template: "templates/tmux.conf"
+      dependencies: []
+      wsl_notes: ""
+
+  shells:
+    zsh:
+      display_name: "Zsh Shell"
+      binary_name: "zsh"
+      install_method: "apt"
+      package_name: "zsh"
+      install_script: ""
+      config_path: "~/.zshrc"
+      config_template: "templates/zsh.conf"
+      dependencies: []
+      wsl_notes: ""
+
+  editors:
+    vim:
+      display_name: "Vim Editor"
+      binary_name: "vim"
+      install_method: "apt"
+      package_name: "vim"
+      install_script: ""
+      config_path: "~/.vimrc"
+      config_template: ""
+      dependencies: []
+      wsl_notes: ""
+
+    neovim:
+      display_name: "Neovim Editor"
+      binary_name: "nvim"
+      install_method: "apt"
+      package_name: "neovim"
+      install_script: ""
+      config_path: "~/.config/nvim/init.vim"
+      config_template: ""
+      dependencies: []
+      wsl_notes: ""
+
+    vscode:
+      display_name: "Visual Studio Code"
+      binary_name: "code"
+      install_method: "manual"
+      package_name: ""
+      install_script: ""
+      config_path: "~/.config/Code/User/settings.json"
+      config_template: "templates/vscode.json"
+      dependencies: []
+      wsl_notes: "Install VS Code on Windows host system. Download from https://code.visualstudio.com/"
+
+  runtime_managers:
+    mise:
+      display_name: "Mise Runtime Manager"
+      binary_name: "mise"
+      install_method: "script"
+      package_name: ""
+      install_script: "install_scripts/mise.sh"
+      config_path: "~/.config/mise/config.toml"
+      config_template: "templates/mise.toml"
+      dependencies: []
+      wsl_notes: ""
+
+  utilities:
+    bat:
+      display_name: "Bat (Better Cat)"
+      binary_name: "bat"
+      install_method: "apt"
+      package_name: "bat"
+      install_script: ""
+      config_path: ""
+      config_template: ""
+      dependencies: []
+      wsl_notes: ""
+
+    fd:
+      display_name: "Fd (Better Find)"
+      binary_name: "fd"
+      install_method: "apt"
+      package_name: "fd-find"
+      install_script: ""
+      config_path: ""
+      config_template: ""
+      dependencies: []
+      wsl_notes: ""
+
+    fzf:
+      display_name: "FZF Fuzzy Finder"
+      binary_name: "fzf"
+      install_method: "script"
+      package_name: ""
+      install_script: "install_scripts/fzf.sh"
+      config_path: ""
+      config_template: ""
+      dependencies: []
+      wsl_notes: ""
+
+    git:
+      display_name: "Git Version Control"
+      binary_name: "git"
+      install_method: "apt"
+      package_name: "git"
+      install_script: ""
+      config_path: "~/.gitconfig"
+      config_template: ""
+      dependencies: []
+      wsl_notes: ""
+
+    curl:
+      display_name: "Curl HTTP Client"
+      binary_name: "curl"
+      install_method: "apt"
+      package_name: "curl"
+      install_script: ""
+      config_path: ""
+      config_template: ""
+      dependencies: []
+      wsl_notes: ""
+
+  tiling_managers:
+    glazewm:
+      display_name: "GlazeWM Tiling Manager"
+      binary_name: "glazewm"
+      install_method: "manual"
+      package_name: ""
+      install_script: ""
+      config_path: ""
+      config_template: ""
+      dependencies: []
+      wsl_notes: "Install GlazeWM on Windows host system. Download from https://github.com/glzr-io/glazewm/releases"
