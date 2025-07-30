@@ -78,3 +78,4 @@ devenv/
 - `go test ./path/to/package` - Run tests in specific package
 - `go test -run TestAdd` - Run specific test function
 - `go test -run "Test.\*Add"` - Run tests matching a pattern
+- `go fmt ./...` - Format all Go files recursively (current directory and subdirectories)
