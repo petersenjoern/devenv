@@ -1,7 +1,7 @@
 package tui
 
 import (
-	"github.com/jrjl/devenv/internal/config"
+	"github.com/petersenjoern/devenv/internal/config"
 )
 
 type TUI struct {

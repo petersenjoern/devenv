@@ -1,7 +1,7 @@
 package detector
 
 import (
-	"github.com/jrjl/devenv/internal/config"
+	"github.com/petersenjoern/devenv/internal/config"
 )
 
 type Status struct {
