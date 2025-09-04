@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/petersenjoern/devenv/internal/tui"
 	"github.com/spf13/cobra"
 )
 
@@ -27,6 +28,13 @@ First prompts for environment selection (WSL/Linux),
 then displays categorized tool selection with dependency resolution.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("Install command - TUI implementation coming soon")
+
+		SelectedCateogiresAndTools, err := tui.CreateInstallationForm()
+		if err != nil {
+			fmt.Printf("Error creating installation form: %v\n", err)
+			return
+		}
+		fmt.Printf("Selected tools for installation: %v\n", SelectedCateogiresAndTools)
 	},
 }
 
