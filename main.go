@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/jrjl/devenv/cmd"
+	"github.com/petersenjoern/devenv/cmd"
 )
 
 func main() {

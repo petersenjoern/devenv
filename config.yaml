@@ -35,6 +35,21 @@ categories:
       dependencies: []
       wsl_notes: ""
 
+    zsh_enhanced:
+      display_name: "Zsh with Oh My Zsh"
+      binary_name: "zsh"
+      install_method: "script"
+      package_name: ""
+      install_script: "install_scripts/zsh.sh"
+      config_path: "~/.zshrc"
+      config_template: "templates/zsh.conf"
+      dependencies: ["git", "curl"]
+      wsl_notes: ""
+      post_install_steps:
+        - "Use 'chsh -s $(which zsh)' to set as default shell"
+        - "Plugins: autosuggestions, syntax-highlighting, z"
+        - "Theme: powerlevel10k (run 'p10k configure')"
+
   editors:
     vim:
       display_name: "Vim Editor"
@@ -58,15 +73,30 @@ categories:
       dependencies: []
       wsl_notes: ""
 
+    # TODO: review this with my current Neovim setup
+    neovim_improved:
+      display_name: "Neovim with LazyVim"
+      binary_name: "nvim"
+      install_method: "script"
+      package_name: ""
+      install_script: "install_scripts/neovim.sh"
+      config_path: "~/.config/nvim/init.lua"
+      config_template: ""
+      dependencies: ["git", "curl"]
+      required_packages: ["luarocks"]
+      wsl_notes: ""
+      post_install_steps:
+        - "LazyVim will auto-install plugins on first run"
+
     vscode:
       display_name: "Visual Studio Code"
       binary_name: "code"
-      install_method: "manual"
+      install_method: "script"
       package_name: ""
-      install_script: ""
+      install_script: "install_scripts/vscode.sh"
       config_path: "~/.config/Code/User/settings.json"
       config_template: "templates/vscode.json"
-      dependencies: []
+      dependencies: ["curl"]
       wsl_notes: "Install VS Code on Windows host system. Download from https://code.visualstudio.com/"
 
   runtime_managers:
@@ -80,6 +110,22 @@ categories:
       config_template: "templates/mise.toml"
       dependencies: []
       wsl_notes: ""
+
+    nvm:
+      display_name: "Node Version Manager"
+      binary_name: "nvm"
+      install_method: "script"
+      package_name: ""
+      install_script: "install_scripts/nvm.sh"
+      config_path: "~/.nvm"
+      config_template: ""
+      dependencies: ["curl", "git"]
+      wsl_notes: ""
+      env_vars:
+        NVM_DIR: "$HOME/.nvm"
+      post_install_steps:
+        - "Source nvm in your shell configuration"
+        - "Use 'nvm install node' to install latest Node.js"
 
   utilities:
     bat:
@@ -112,8 +158,10 @@ categories:
       install_script: "install_scripts/fzf.sh"
       config_path: ""
       config_template: ""
-      dependencies: []
+      dependencies: ["git"]
       wsl_notes: ""
+      post_install_steps:
+        - "Source fzf key bindings in your shell"
 
     git:
       display_name: "Git Version Control"
@@ -126,6 +174,19 @@ categories:
       dependencies: []
       wsl_notes: ""
 
+    github_cli:
+      display_name: "GitHub CLI"
+      binary_name: "gh"
+      install_method: "script"
+      package_name: ""
+      install_script: "install_scripts/github-cli.sh"
+      config_path: "~/.config/gh"
+      config_template: ""
+      dependencies: ["curl"]
+      wsl_notes: ""
+      post_install_steps:
+        - "Use 'gh auth login' to authenticate"
+
     curl:
       display_name: "Curl HTTP Client"
       binary_name: "curl"
@@ -136,6 +197,68 @@ categories:
       config_template: ""
       dependencies: []
       wsl_notes: ""
+
+    btop:
+      display_name: "Btop System Monitor"
+      binary_name: "btop"
+      install_method: "script"
+      package_name: ""
+      install_script: "install_scripts/btop.sh"
+      config_path: "~/.config/btop/btop.conf"
+      config_template: ""
+      dependencies: []
+      wsl_notes: ""
+
+    lazygit:
+      display_name: "Lazygit Terminal UI"
+      binary_name: "lazygit"
+      install_method: "script"
+      package_name: ""
+      install_script: "install_scripts/lazygit.sh"
+      config_path: "~/.config/lazygit/config.yml"
+      config_template: ""
+      dependencies: ["curl", "git"]
+      wsl_notes: ""
+
+    lazydocker:
+      display_name: "Lazydocker Terminal UI"
+      binary_name: "lazydocker"
+      install_method: "script"
+      package_name: ""
+      install_script: "install_scripts/lazydocker.sh"
+      config_path: ""
+      config_template: ""
+      dependencies: ["curl", "docker"]
+      wsl_notes: ""
+
+    broot:
+      display_name: "Broot Tree Explorer"
+      binary_name: "broot"
+      install_method: "download"
+      package_name: ""
+      install_script: ""
+      config_path: "~/.config/broot/conf.hjson"
+      config_template: ""
+      dependencies: []
+      wsl_notes: ""
+      download_url: "https://dystroy.org/broot/download/x86_64-unknown-linux-gnu/broot"
+      install_location: "/usr/local/bin/broot"
+
+  containerization:
+    docker:
+      display_name: "Docker Engine"
+      binary_name: "docker"
+      install_method: "script"
+      package_name: ""
+      install_script: "install_scripts/docker.sh"
+      config_path: "/etc/docker/daemon.json"
+      config_template: ""
+      dependencies: ["curl", "wget"]
+      wsl_notes: "Install docker inside WSL2."
+      post_install_steps:
+        - "Log out and back in for group permissions"
+        - "Start Docker service: sudo systemctl start docker"
+        - "Enable Docker service: sudo systemctl enable docker"
 
   tiling_managers:
     glazewm:
