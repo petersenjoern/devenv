@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"os"
 
 	"gopkg.in/yaml.v3"
@@ -41,12 +42,28 @@ func LoadConfig(filePath string) (Config, error) {
 	var cfg Config
 	err = yaml.Unmarshal(file, &cfg)
 	if err != nil {
-		return Config{}, err
+		return Config{}, fmt.Errorf("failed to unmarshal config: %w", err)
 	}
-	
+
 	return cfg, nil
 }
 
-func loadConfig() (Config, error) {
-	return LoadConfig("config.yaml")
+func GetCategories(cfg Config) []string {
+	categories := make([]string, 0, len(cfg.Categories))
+	for category := range cfg.Categories {
+		categories = append(categories, category)
+	}
+	return categories
+}
+func GetToolsInCategory(cfg Config, category string) (CategoryConfig, bool) {
+	tools, exists := cfg.Categories[category]
+	return tools, exists
+}
+func GetTool(cfg Config, category, toolName string) (ToolConfig, bool) {
+	tools, exists := cfg.Categories[category]
+	if !exists {
+		return ToolConfig{}, false
+	}
+	tool, exists := tools[toolName]
+	return tool, exists
 }
