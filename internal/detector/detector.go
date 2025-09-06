@@ -1,6 +1,8 @@
 package detector
 
 import (
+	"os/exec"
+
 	"github.com/petersenjoern/devenv/internal/config"
 )
 
@@ -19,7 +21,7 @@ func New() *Detector {
 
 func (d *Detector) DetectTool(tool config.ToolConfig) Status {
 	return Status{
-		BinaryInstalled: false,
+		BinaryInstalled: d.IsBinaryInstalled(tool.BinaryName),
 		ConfigApplied:   false,
 		Version:         "",
 		Path:            "",
@@ -28,4 +30,9 @@ func (d *Detector) DetectTool(tool config.ToolConfig) Status {
 
 func (d *Detector) DetectEnvironment() (string, error) {
 	return "linux", nil
+}
+
+func (d *Detector) IsBinaryInstalled(binaryName string) bool {
+	_, err := exec.LookPath(binaryName)
+	return err == nil
 }
