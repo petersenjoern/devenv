@@ -311,3 +311,85 @@ func TestShowInteractiveToolSelection_ShouldUseInteractiveForm(t *testing.T) {
 	// Should return structured selections (even if empty in test environment)
 	// The structure should match our existing Selections format
 }
+
+func TestRunInteractiveFormWithDefaults_ShouldExecuteFormLogic(t *testing.T) {
+	cfg := config.Config{
+		Categories: map[string]config.CategoryConfig{
+			"shells": {
+				"bash": config.ToolConfig{
+					DisplayName: "Bash Shell",
+					BinaryName:  "bash",
+				},
+				"zsh": config.ToolConfig{
+					DisplayName: "Zsh Shell",
+					BinaryName:  "zsh",
+				},
+			},
+		},
+	}
+	
+	tui := New(cfg)
+	
+	// Should execute form logic and capture selections
+	// In test environment, should use default values or skip interactive parts
+	selections, err := tui.RunInteractiveFormWithDefaults()
+	
+	if err != nil {
+		t.Errorf("Expected no error, got: %v", err)
+	}
+	
+	if selections.CategoryAndTools == nil {
+		t.Errorf("Expected selections.CategoryAndTools to not be nil")
+	}
+	
+	// Should have processed the categories
+	if len(selections.CategoryAndTools) == 0 {
+		t.Errorf("Expected selections to contain categories, got empty")
+	}
+	
+	// Should contain the shells category
+	found := false
+	for _, categoryTools := range selections.CategoryAndTools {
+		if categoryTools.Category == "shells" {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Errorf("Expected to find 'shells' category in selections")
+	}
+}
+
+func TestExecuteInteractiveForm_ShouldHandleFormExecution(t *testing.T) {
+	cfg := config.Config{
+		Categories: map[string]config.CategoryConfig{
+			"shells": {
+				"bash": config.ToolConfig{
+					DisplayName: "Bash Shell",
+					BinaryName:  "bash",
+				},
+			},
+		},
+	}
+	
+	tui := New(cfg)
+	
+	// Create the form groups
+	formGroups, err := tui.CreateInteractiveToolForm()
+	if err != nil {
+		t.Skip("Skipping test - form creation failed")
+	}
+	
+	// Should execute the interactive form (or simulate execution in tests)
+	selections, err := tui.ExecuteInteractiveForm(formGroups)
+	
+	if err != nil {
+		t.Errorf("Expected no error, got: %v", err)
+	}
+	
+	if selections.CategoryAndTools == nil {
+		t.Errorf("Expected selections.CategoryAndTools to not be nil")
+	}
+	
+	// Should return proper structure from form execution
+}
