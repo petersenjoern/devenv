@@ -2,6 +2,7 @@ package detector
 
 import (
 	"os/exec"
+	"strings"
 
 	"github.com/petersenjoern/devenv/internal/config"
 )
@@ -20,21 +21,22 @@ func New() *Detector {
 }
 
 func (d *Detector) DetectTool(tool config.ToolConfig) Status {
-	var binaryPath string
-	binaryInstalled := d.IsBinaryInstalled(tool.BinaryName)
-
-	if binaryInstalled {
-		path, _ := exec.LookPath(tool.BinaryName)
-		binaryPath = path
-	} else {
-		binaryPath = ""
+	path, err := exec.LookPath(tool.BinaryName)
+	
+	if err != nil {
+		return Status{
+			BinaryInstalled: false,
+			ConfigApplied:   false,
+			Version:         "",
+			Path:            "",
+		}
 	}
 
 	return Status{
-		BinaryInstalled: binaryInstalled,
+		BinaryInstalled: true,
 		ConfigApplied:   false,
-		Version:         "",
-		Path:            binaryPath,
+		Version:         d.GetVersion(tool.BinaryName),
+		Path:            path,
 	}
 }
 
@@ -45,4 +47,20 @@ func (d *Detector) DetectEnvironment() (string, error) {
 func (d *Detector) IsBinaryInstalled(binaryName string) bool {
 	_, err := exec.LookPath(binaryName)
 	return err == nil
+}
+
+func (d *Detector) GetVersion(binaryName string) string {
+	cmd := exec.Command(binaryName, "--version")
+	output, err := cmd.Output()
+	if err != nil {
+		return "unknown"
+	}
+	
+	version := strings.TrimSpace(string(output))
+	lines := strings.Split(version, "\n")
+	if len(lines) > 0 {
+		return strings.TrimSpace(lines[0])
+	}
+	
+	return "unknown"
 }

@@ -87,3 +87,31 @@ func TestDetectTool_ShouldReturnEmptyPathForNonExistentBinary(t *testing.T) {
 		t.Errorf("Expected Path to be empty for non-existent binary, got '%s'", status.Path)
 	}
 }
+
+func TestDetectTool_ShouldReturnVersionForInstalledBinary(t *testing.T) {
+	detector := New()
+
+	tool := config.ToolConfig{
+		BinaryName: "bash",
+	}
+
+	status := detector.DetectTool(tool)
+
+	if status.Version == "" {
+		t.Errorf("Expected Version to be set for installed binary 'bash', got empty string")
+	}
+}
+
+func TestDetectTool_ShouldReturnEmptyVersionForNonExistentBinary(t *testing.T) {
+	detector := New()
+
+	tool := config.ToolConfig{
+		BinaryName: "nonexistent-binary-12345",
+	}
+
+	status := detector.DetectTool(tool)
+
+	if status.Version != "" {
+		t.Errorf("Expected Version to be empty for non-existent binary, got '%s'", status.Version)
+	}
+}
