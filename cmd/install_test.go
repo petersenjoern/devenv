@@ -1,6 +1,9 @@
 package cmd
 
 import (
+	"io"
+	"os"
+	"strings"
 	"testing"
 )
 
@@ -70,5 +73,31 @@ func TestRunInstallFlowWithConfig_ShouldExecuteCompleteFlow(t *testing.T) {
 
 	if result.Selections.CategoryAndTools == nil {
 		t.Errorf("Expected result.Selections.CategoryAndTools to not be nil")
+	}
+}
+
+func TestInstallCommand_ShouldUseInstallFlow(t *testing.T) {
+	// Since fmt.Printf writes directly to stdout (not to cobra's output buffer),
+	// we need to capture stdout directly using os.Stdout redirection
+
+	// Save original stdout
+	origStdout := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	installCmd.Run(installCmd, []string{})
+
+	w.Close()
+	os.Stdout = origStdout
+
+	var output strings.Builder
+	io.Copy(&output, r)
+	outputStr := output.String()
+
+	hasToolSelection := strings.Contains(outputStr, "Selected tools for installation:")
+	hasRunFlowError := strings.Contains(outputStr, "Error running install flow:")
+
+	if !hasToolSelection && !hasRunFlowError {
+		t.Errorf("Install command should show tool selection results or RunInstallFlow error, got: %q", outputStr)
 	}
 }

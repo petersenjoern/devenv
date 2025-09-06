@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/petersenjoern/devenv/internal/config"
 	"github.com/petersenjoern/devenv/internal/tui"
@@ -28,14 +29,12 @@ var installCmd = &cobra.Command{
 First prompts for environment selection (WSL/Linux), 
 then displays categorized tool selection with dependency resolution.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("Install command - TUI implementation coming soon")
-
-		SelectedCateogiresAndTools, err := tui.CreateInstallationForm()
+		selections, err := RunInstallFlow()
 		if err != nil {
-			fmt.Printf("Error creating installation form: %v\n", err)
+			fmt.Printf("Error running install flow: %v\n", err)
 			return
 		}
-		fmt.Printf("Selected tools for installation: %v\n", SelectedCateogiresAndTools)
+		fmt.Printf("Selected tools for installation: %v\n", selections)
 	},
 }
 
@@ -58,7 +57,16 @@ func RunInstallFlow() (tui.Selections, error) {
 }
 
 func CreateInstallTUI() (*tui.TUI, error) {
-	return createTUIFromConfig("./config.yaml")
+	// CLI entry vs unittest entry
+	configPaths := []string{"./config.yaml", "../config.yaml"}
+
+	for _, configPath := range configPaths {
+		if _, err := os.Stat(configPath); err == nil {
+			return createTUIFromConfig(configPath)
+		}
+	}
+
+	return nil, fmt.Errorf("config file not found, tried: %v", configPaths)
 }
 
 func RunInstallFlowWithConfig(configPath string) (InstallResult, error) {
