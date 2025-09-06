@@ -55,3 +55,35 @@ func TestDetectTool_ShouldDetectNonExistentBinary(t *testing.T) {
 		t.Errorf("Expected BinaryInstalled to be false for 'nonexistent-binary-12345', got true")
 	}
 }
+
+func TestDetectTool_ShouldReturnPathForInstalledBinary(t *testing.T) {
+	detector := New()
+
+	tool := config.ToolConfig{
+		BinaryName: "ls",
+	}
+
+	status := detector.DetectTool(tool)
+
+	if status.Path == "" {
+		t.Errorf("Expected Path to be set for installed binary 'ls', got empty string")
+	}
+
+	if status.Path != "/usr/bin/ls" && status.Path != "/bin/ls" {
+		t.Logf("Path for 'ls' is: %s (this may vary by system)", status.Path)
+	}
+}
+
+func TestDetectTool_ShouldReturnEmptyPathForNonExistentBinary(t *testing.T) {
+	detector := New()
+
+	tool := config.ToolConfig{
+		BinaryName: "nonexistent-binary-12345",
+	}
+
+	status := detector.DetectTool(tool)
+
+	if status.Path != "" {
+		t.Errorf("Expected Path to be empty for non-existent binary, got '%s'", status.Path)
+	}
+}

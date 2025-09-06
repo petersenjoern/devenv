@@ -20,11 +20,21 @@ func New() *Detector {
 }
 
 func (d *Detector) DetectTool(tool config.ToolConfig) Status {
+	var binaryPath string
+	binaryInstalled := d.IsBinaryInstalled(tool.BinaryName)
+
+	if binaryInstalled {
+		path, _ := exec.LookPath(tool.BinaryName)
+		binaryPath = path
+	} else {
+		binaryPath = ""
+	}
+
 	return Status{
-		BinaryInstalled: d.IsBinaryInstalled(tool.BinaryName),
+		BinaryInstalled: binaryInstalled,
 		ConfigApplied:   false,
 		Version:         "",
-		Path:            "",
+		Path:            binaryPath,
 	}
 }
 
