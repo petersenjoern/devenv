@@ -2,6 +2,8 @@ package tui
 
 import (
 	"fmt"
+	"os"
+	"strings"
 
 	"github.com/charmbracelet/huh"
 	"github.com/petersenjoern/devenv/internal/config"
@@ -26,8 +28,42 @@ func New(cfg config.Config) *TUI {
 	}
 }
 
-func (t *TUI) ShowEnvironmentSelection() (string, error) {
+func (t *TUI) DetectActualEnvironment() (string, error) {
+	if t.isWSLEnvironment() {
+		return "wsl", nil
+	}
+	
 	return "linux", nil
+}
+
+func (t *TUI) isWSLEnvironment() bool {
+	// Check WSL_DISTRO_NAME environment variable (WSL2) - most reliable
+	if os.Getenv("WSL_DISTRO_NAME") != "" {
+		return true
+	}
+	
+	// Check /proc/version for WSL indicators
+	content, err := os.ReadFile("/proc/version")
+	if err != nil {
+		// Can't read /proc/version - we can't determine if it's WSL
+		// Default to false (not confirmed WSL) but this shouldn't happen on Linux
+		return false
+	}
+	
+	versionStr := strings.ToLower(string(content))
+	return strings.Contains(versionStr, "microsoft") || strings.Contains(versionStr, "wsl")
+}
+
+func (t *TUI) ShowEnvironmentSelection() (string, error) {
+	detected, err := t.DetectActualEnvironment()
+	if err != nil {
+		return "", err
+	}
+
+	// For now, return the detected environment as default
+	// TODO: Later implement interactive selection with huh
+	// however make use of the detected environment as default
+	return detected, nil
 }
 
 func (t *TUI) ShowToolSelection() ([]string, error) {
