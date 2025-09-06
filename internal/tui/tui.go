@@ -67,7 +67,21 @@ func (t *TUI) ShowEnvironmentSelection() (string, error) {
 }
 
 func (t *TUI) ShowToolSelection() ([]string, error) {
-	return []string{}, nil
+	// Use the categorized selection we built
+	categorySelections, err := t.ShowToolSelectionByCategory()
+	if err != nil {
+		return []string{}, err
+	}
+	
+	// Flatten the categorized tools into a simple slice
+	selectedTools := make([]string, 0)
+	for _, categoryTools := range categorySelections.CategoryAndTools {
+		selectedTools = append(selectedTools, categoryTools.Tools...)
+	}
+	
+	// For now, return all available tools
+	// TODO: Later implement interactive selection with huh library
+	return selectedTools, nil
 }
 
 func (t *TUI) ShowToolSelectionByCategory() (Selections, error) {

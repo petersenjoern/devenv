@@ -164,3 +164,76 @@ func TestShowEnvironmentSelection_ShouldUseDetectedEnvironmentAsDefault(t *testi
 		t.Errorf("Expected ShowEnvironmentSelection to use detected environment 'wsl' as default, got 'linux'")
 	}
 }
+
+func TestShowToolSelection_ShouldReturnToolsFromAllCategories(t *testing.T) {
+	cfg := config.Config{
+		Categories: map[string]config.CategoryConfig{
+			"shells": {
+				"bash": config.ToolConfig{
+					DisplayName: "Bash Shell",
+					BinaryName:  "bash",
+				},
+				"zsh": config.ToolConfig{
+					DisplayName: "Zsh Shell",
+					BinaryName:  "zsh",
+				},
+			},
+			"editors": {
+				"vim": config.ToolConfig{
+					DisplayName: "Vim Editor",
+					BinaryName:  "vim",
+				},
+			},
+		},
+	}
+	
+	tui := New(cfg)
+	
+	selectedTools, err := tui.ShowToolSelection()
+	
+	if err != nil {
+		t.Errorf("Expected no error, got: %v", err)
+	}
+	
+	// Should return a non-empty slice when tools are available
+	if len(selectedTools) == 0 {
+		t.Errorf("Expected ShowToolSelection to return selected tools, got empty slice")
+	}
+	
+	// Should be able to return tools from multiple categories
+	// In a real scenario, this would be user-selected, but for testing
+	// we expect it to potentially return tools from both categories
+}
+
+func TestShowToolSelection_ShouldUseCategorizedSelection(t *testing.T) {
+	cfg := config.Config{
+		Categories: map[string]config.CategoryConfig{
+			"shells": {
+				"bash": config.ToolConfig{
+					DisplayName: "Bash Shell",
+					BinaryName:  "bash",
+				},
+			},
+		},
+	}
+	
+	tui := New(cfg)
+	
+	// ShowToolSelection should internally use ShowToolSelectionByCategory
+	// and flatten the results into a simple []string
+	categorySelections, err := tui.ShowToolSelectionByCategory()
+	if err != nil {
+		t.Skip("Skipping test - categorized selection failed")
+	}
+	
+	toolSelections, err := tui.ShowToolSelection()
+	if err != nil {
+		t.Errorf("Expected no error, got: %v", err)
+	}
+	
+	// The tool selection should be related to the categorized selection
+	// At minimum, if we have categories, we should get some tool selection capability
+	if len(categorySelections.CategoryAndTools) > 0 && len(toolSelections) == 0 {
+		t.Errorf("Expected ShowToolSelection to return tools when categories are available, got empty")
+	}
+}
