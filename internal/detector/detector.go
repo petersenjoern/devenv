@@ -1,6 +1,7 @@
 package detector
 
 import (
+	"os"
 	"os/exec"
 	"strings"
 
@@ -34,7 +35,7 @@ func (d *Detector) DetectTool(tool config.ToolConfig) Status {
 
 	return Status{
 		BinaryInstalled: true,
-		ConfigApplied:   false,
+		ConfigApplied:   d.IsConfigExisting(tool.ConfigPath),
 		Version:         d.GetVersion(tool.BinaryName),
 		Path:            path,
 	}
@@ -63,4 +64,13 @@ func (d *Detector) GetVersion(binaryName string) string {
 	}
 	
 	return "unknown"
+}
+
+func (d *Detector) IsConfigExisting(configPath string) bool {
+	if configPath == "" {
+		return false
+	}
+	
+	_, err := os.Stat(configPath)
+	return err == nil
 }

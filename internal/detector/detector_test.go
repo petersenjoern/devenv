@@ -115,3 +115,33 @@ func TestDetectTool_ShouldReturnEmptyVersionForNonExistentBinary(t *testing.T) {
 		t.Errorf("Expected Version to be empty for non-existent binary, got '%s'", status.Version)
 	}
 }
+
+func TestDetectTool_ShouldDetectConfigWhenFileExists(t *testing.T) {
+	detector := New()
+
+	tool := config.ToolConfig{
+		BinaryName: "bash",
+		ConfigPath: "/etc/passwd", // This file should exist on all Linux systems
+	}
+
+	status := detector.DetectTool(tool)
+
+	if !status.ConfigApplied {
+		t.Errorf("Expected ConfigApplied to be true when config file exists, got false")
+	}
+}
+
+func TestDetectTool_ShouldReturnFalseConfigWhenFileDoesNotExist(t *testing.T) {
+	detector := New()
+
+	tool := config.ToolConfig{
+		BinaryName: "bash",
+		ConfigPath: "/nonexistent/config/path/file.conf",
+	}
+
+	status := detector.DetectTool(tool)
+
+	if status.ConfigApplied {
+		t.Errorf("Expected ConfigApplied to be false when config file doesn't exist, got true")
+	}
+}
