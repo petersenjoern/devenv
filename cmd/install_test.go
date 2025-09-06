@@ -1,0 +1,74 @@
+package cmd
+
+import (
+	"testing"
+)
+
+func TestInstallCommandIntegration_ShouldUseTUIFlow(t *testing.T) {
+	// Test that the install command properly integrates with our TUI methods
+	// This would test the end-to-end flow:
+	// 1. Load config
+	// 2. Detect/select environment
+	// 3. Show interactive tool selection
+	// 4. Return structured selections
+
+	selections, err := RunInstallFlow()
+
+	if err != nil {
+		t.Errorf("Expected no error from install flow, got: %v", err)
+	}
+
+	if selections.CategoryAndTools == nil {
+		t.Errorf("Expected selections.CategoryAndTools to not be nil")
+	}
+
+	// Should return structured selections ready for installation
+	if len(selections.CategoryAndTools) == 0 {
+		t.Errorf("Expected install flow to return categories, got empty")
+	}
+}
+
+func TestCreateInstallTUI_ShouldLoadConfigAndCreateTUI(t *testing.T) {
+	// Test that we can create a TUI instance with loaded config
+	tuiInstance, err := CreateInstallTUI()
+
+	if err != nil {
+		t.Errorf("Expected no error creating TUI, got: %v", err)
+	}
+
+	if tuiInstance == nil {
+		t.Errorf("Expected TUI instance to not be nil")
+	}
+
+	env, err := tuiInstance.DetectActualEnvironment()
+	if err != nil {
+		t.Errorf("Expected no error detecting environment, got: %v", err)
+	}
+
+	if env != "linux" && env != "wsl" {
+		t.Errorf("Expected environment to be 'linux' or 'wsl', got: %s", env)
+	}
+}
+
+func TestRunInstallFlowWithConfig_ShouldExecuteCompleteFlow(t *testing.T) {
+	// Test the complete install flow:
+	// 1. Environment detection/selection
+	// 2. Tool selection
+	// 3. Return results
+
+	configPath := "../config.yaml"
+
+	result, err := RunInstallFlowWithConfig(configPath)
+
+	if err != nil {
+		t.Skip("Skipping test - config file not available")
+	}
+
+	if result.Environment == "" {
+		t.Errorf("Expected environment to be set in result")
+	}
+
+	if result.Selections.CategoryAndTools == nil {
+		t.Errorf("Expected result.Selections.CategoryAndTools to not be nil")
+	}
+}

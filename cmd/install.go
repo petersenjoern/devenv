@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/petersenjoern/devenv/internal/config"
 	"github.com/petersenjoern/devenv/internal/tui"
 	"github.com/spf13/cobra"
 )
@@ -40,6 +41,56 @@ then displays categorized tool selection with dependency resolution.`,
 
 func Execute() error {
 	return rootCmd.Execute()
+}
+
+type InstallResult struct {
+	Environment string
+	Selections  tui.Selections
+}
+
+func RunInstallFlow() (tui.Selections, error) {
+	tuiInstance, err := CreateInstallTUI()
+	if err != nil {
+		return tui.Selections{}, err
+	}
+
+	return tuiInstance.ShowInteractiveToolSelection()
+}
+
+func CreateInstallTUI() (*tui.TUI, error) {
+	return createTUIFromConfig("./config.yaml")
+}
+
+func RunInstallFlowWithConfig(configPath string) (InstallResult, error) {
+	var result InstallResult
+
+	tuiInstance, err := createTUIFromConfig(configPath)
+	if err != nil {
+		return result, fmt.Errorf("failed to create TUI instance: %w", err)
+	}
+
+	env, err := tuiInstance.DetectActualEnvironment()
+	if err != nil {
+		return result, fmt.Errorf("failed to detect environment: %w", err)
+	}
+	result.Environment = env
+
+	selections, err := tuiInstance.ShowInteractiveToolSelection()
+	if err != nil {
+		return result, fmt.Errorf("failed to run interactive tool selection: %w", err)
+	}
+	result.Selections = selections
+
+	return result, nil
+}
+
+func createTUIFromConfig(configPath string) (*tui.TUI, error) {
+	cfg, err := config.LoadConfig(configPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load config from %s: %w", configPath, err)
+	}
+
+	return tui.New(cfg), nil
 }
 
 func init() {
