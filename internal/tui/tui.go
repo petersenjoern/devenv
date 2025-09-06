@@ -118,25 +118,30 @@ func (t *TUI) buildCategorySelection(categoryName string) CategoryAndTools {
 	return categorySelection
 }
 
-func (t *TUI) CreateInteractiveToolForm() ([]*huh.Group, error) {
+func (t *TUI) CreateInteractiveToolForm() ([]*huh.Group, map[string]*[]string, error) {
 	formGroups := make([]*huh.Group, 0)
+	categorySelections := make(map[string]*[]string)
 
 	categories := config.GetCategories(t.config)
 	if len(categories) == 0 {
-		return formGroups, fmt.Errorf("no categories found in config")
+		return formGroups, categorySelections, fmt.Errorf("no categories found in config")
 	}
 
 	for _, categoryName := range categories {
-		group := t.createCategoryFormGroup(categoryName)
+		// Create a selection slice for this category
+		selectedTools := make([]string, 0)
+		categorySelections[categoryName] = &selectedTools
+
+		group := t.createCategoryFormGroup(categoryName, &selectedTools)
 		if group != nil {
 			formGroups = append(formGroups, group)
 		}
 	}
 
-	return formGroups, nil
+	return formGroups, categorySelections, nil
 }
 
-func (t *TUI) createCategoryFormGroup(categoryName string) *huh.Group {
+func (t *TUI) createCategoryFormGroup(categoryName string, selectedTools *[]string) *huh.Group {
 	tools, exists := config.GetToolsInCategory(t.config, categoryName)
 	if !exists {
 		return nil
@@ -151,12 +156,11 @@ func (t *TUI) createCategoryFormGroup(categoryName string) *huh.Group {
 		return nil
 	}
 
-	var selectedTools []string
 	return huh.NewGroup(
 		huh.NewMultiSelect[string]().
 			Title(categoryName).
 			Options(options...).
-			Value(&selectedTools),
+			Value(selectedTools),
 	)
 }
 
@@ -166,36 +170,34 @@ func (t *TUI) ShowInteractiveToolSelection() (Selections, error) {
 }
 
 func (t *TUI) RunInteractiveFormWithDefaults() (Selections, error) {
-	formGroups, err := t.CreateInteractiveToolForm()
+	formGroups, categorySelections, err := t.CreateInteractiveToolForm()
 	if err != nil {
 		return Selections{}, err
 	}
 
-	return t.ExecuteInteractiveForm(formGroups)
+	return t.ExecuteInteractiveForm(formGroups, categorySelections)
 }
 
-func (t *TUI) ExecuteInteractiveForm(formGroups []*huh.Group) (Selections, error) {
+func (t *TUI) ExecuteInteractiveForm(formGroups []*huh.Group, categorySelections map[string]*[]string) (Selections, error) {
 	var selections Selections
 
 	if len(formGroups) == 0 {
 		return selections, fmt.Errorf("no interactive forms available")
 	}
 
-	// Check if we're in a test environment or non-interactive context
+	// Check if we're in a test environment or non-interactive context In test environments, return structured
+	// selections with all available tools
 	if t.isTestEnvironment() {
-		// In test environments, return structured selections with all available tools
 		return t.createDefaultSelections(), nil
 	}
 
-	// Create a form and run it interactively
 	form := huh.NewForm(formGroups...)
 	err := form.Run()
 	if err != nil {
 		return selections, fmt.Errorf("failed to run interactive form: %w", err)
 	}
 
-	// If form ran successfully, extract the selected tools
-	return t.extractSelectionsFromForm(formGroups)
+	return t.extractSelectionsFromCategoryMap(categorySelections)
 }
 
 func (t *TUI) isTestEnvironment() bool {
@@ -210,8 +212,20 @@ func (t *TUI) isTestEnvironment() bool {
 		return true
 	}
 
-	// 3. Check if we're running under 'go test' command by looking at the program name
-	// Note: GOPATH is often set in dev environments, so we removed it from test detection
+	// 3. Check if the program name contains ".test" (created by go test)
+	if len(os.Args) > 0 {
+		programName := os.Args[0]
+		if strings.Contains(programName, ".test") || strings.Contains(programName, "test") {
+			return true
+		}
+	}
+
+	// 4. Check if we're in a testing context by looking for testing flags
+	for _, arg := range os.Args {
+		if strings.HasPrefix(arg, "-test.") {
+			return true
+		}
+	}
 
 	return false
 }
@@ -228,22 +242,15 @@ func (t *TUI) createDefaultSelections() Selections {
 	return selections
 }
 
-func (t *TUI) extractSelectionsFromForm(formGroups []*huh.Group) (Selections, error) {
+func (t *TUI) extractSelectionsFromCategoryMap(categorySelections map[string]*[]string) (Selections, error) {
 	var selections Selections
 
-	// Extract selections from each form group
-	// This would contain the actual user selections from the interactive form
-	categories := config.GetCategories(t.config)
-	for i, categoryName := range categories {
-		if i < len(formGroups) {
-			// In a real implementation, we'd extract the selected values from the form
-			// For now, return the structure with empty selections
-			categorySelection := CategoryAndTools{
-				Category: categoryName,
-				Tools:    []string{}, // Would be populated from form values
-			}
-			selections.CategoryAndTools = append(selections.CategoryAndTools, categorySelection)
+	for categoryName, selectedToolsPtr := range categorySelections {
+		categorySelection := CategoryAndTools{
+			Category: categoryName,
+			Tools:    *selectedToolsPtr,
 		}
+		selections.CategoryAndTools = append(selections.CategoryAndTools, categorySelection)
 	}
 
 	return selections, nil

@@ -263,7 +263,7 @@ func TestCreateInteractiveToolForm_ShouldReturnStructuredForm(t *testing.T) {
 	tui := New(cfg)
 	
 	// Should create a structured form for interactive selection
-	formGroups, err := tui.CreateInteractiveToolForm()
+	formGroups, categorySelections, err := tui.CreateInteractiveToolForm()
 	
 	if err != nil {
 		t.Errorf("Expected no error, got: %v", err)
@@ -273,6 +273,10 @@ func TestCreateInteractiveToolForm_ShouldReturnStructuredForm(t *testing.T) {
 		t.Errorf("Expected form groups to not be nil")
 	}
 	
+	if categorySelections == nil {
+		t.Errorf("Expected category selections to not be nil")
+	}
+	
 	if len(formGroups) == 0 {
 		t.Errorf("Expected form groups to contain category forms, got empty")
 	}
@@ -280,6 +284,11 @@ func TestCreateInteractiveToolForm_ShouldReturnStructuredForm(t *testing.T) {
 	// Should have forms for each category
 	if len(formGroups) != 2 {
 		t.Errorf("Expected 2 form groups (shells, editors), got %d", len(formGroups))
+	}
+	
+	// Should have selection maps for each category
+	if len(categorySelections) != 2 {
+		t.Errorf("Expected 2 category selections (shells, editors), got %d", len(categorySelections))
 	}
 }
 
@@ -375,13 +384,13 @@ func TestExecuteInteractiveForm_ShouldHandleFormExecution(t *testing.T) {
 	tui := New(cfg)
 	
 	// Create the form groups
-	formGroups, err := tui.CreateInteractiveToolForm()
+	formGroups, categorySelections, err := tui.CreateInteractiveToolForm()
 	if err != nil {
 		t.Skip("Skipping test - form creation failed")
 	}
 	
 	// Should execute the interactive form (or simulate execution in tests)
-	selections, err := tui.ExecuteInteractiveForm(formGroups)
+	selections, err := tui.ExecuteInteractiveForm(formGroups, categorySelections)
 	
 	if err != nil {
 		t.Errorf("Expected no error, got: %v", err)
