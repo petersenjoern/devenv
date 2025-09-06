@@ -70,6 +70,40 @@ func (t *TUI) ShowToolSelection() ([]string, error) {
 	return []string{}, nil
 }
 
+func (t *TUI) ShowToolSelectionByCategory() (Selections, error) {
+	var selections Selections
+	
+	categories := config.GetCategories(t.config)
+	if len(categories) == 0 {
+		return selections, fmt.Errorf("no categories found in config")
+	}
+	
+	for _, categoryName := range categories {
+		categorySelection := t.buildCategorySelection(categoryName)
+		selections.CategoryAndTools = append(selections.CategoryAndTools, categorySelection)
+	}
+	
+	return selections, nil
+}
+
+func (t *TUI) buildCategorySelection(categoryName string) CategoryAndTools {
+	categorySelection := CategoryAndTools{
+		Category: categoryName,
+		Tools:    make([]string, 0),
+	}
+	
+	tools, exists := config.GetToolsInCategory(t.config, categoryName)
+	if !exists {
+		return categorySelection
+	}
+	
+	for _, tool := range tools {
+		categorySelection.Tools = append(categorySelection.Tools, tool.BinaryName)
+	}
+	
+	return categorySelection
+}
+
 func (t *TUI) ShowInstallationProgress(tools []string) error {
 	return nil
 }

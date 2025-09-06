@@ -62,6 +62,65 @@ func TestShowToolSelection_ShouldReturnSelectedTools(t *testing.T) {
 	}
 }
 
+func TestShowToolSelectionByCategory_ShouldOrganizeToolsByCategory(t *testing.T) {
+	cfg := config.Config{
+		Categories: map[string]config.CategoryConfig{
+			"shells": {
+				"bash": config.ToolConfig{
+					DisplayName: "Bash Shell",
+					BinaryName:  "bash",
+				},
+				"zsh": config.ToolConfig{
+					DisplayName: "Zsh Shell", 
+					BinaryName:  "zsh",
+				},
+			},
+			"editors": {
+				"vim": config.ToolConfig{
+					DisplayName: "Vim Editor",
+					BinaryName:  "vim",
+				},
+			},
+		},
+	}
+	
+	tui := New(cfg)
+	
+	selections, err := tui.ShowToolSelectionByCategory()
+	
+	if err != nil {
+		t.Errorf("Expected no error, got: %v", err)
+	}
+	
+	if selections.CategoryAndTools == nil {
+		t.Errorf("Expected selections.CategoryAndTools to not be nil")
+	}
+	
+	// Should have entries for both categories
+	if len(selections.CategoryAndTools) == 0 {
+		t.Errorf("Expected selections to contain category entries, got empty")
+	}
+	
+	// Should contain at least the categories we defined
+	foundShells := false
+	foundEditors := false
+	for _, categoryTools := range selections.CategoryAndTools {
+		if categoryTools.Category == "shells" {
+			foundShells = true
+		}
+		if categoryTools.Category == "editors" {
+			foundEditors = true
+		}
+	}
+	
+	if !foundShells {
+		t.Errorf("Expected to find 'shells' category in selections")
+	}
+	if !foundEditors {
+		t.Errorf("Expected to find 'editors' category in selections")
+	}
+}
+
 func TestDetectActualEnvironment_ShouldDetectWSLOrLinux(t *testing.T) {
 	cfg := config.Config{}
 	tui := New(cfg)
