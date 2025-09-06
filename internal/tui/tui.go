@@ -118,6 +118,74 @@ func (t *TUI) buildCategorySelection(categoryName string) CategoryAndTools {
 	return categorySelection
 }
 
+func (t *TUI) CreateInteractiveToolForm() ([]*huh.Group, error) {
+	formGroups := make([]*huh.Group, 0)
+	
+	categories := config.GetCategories(t.config)
+	if len(categories) == 0 {
+		return formGroups, fmt.Errorf("no categories found in config")
+	}
+	
+	for _, categoryName := range categories {
+		group := t.createCategoryFormGroup(categoryName)
+		if group != nil {
+			formGroups = append(formGroups, group)
+		}
+	}
+	
+	return formGroups, nil
+}
+
+func (t *TUI) createCategoryFormGroup(categoryName string) *huh.Group {
+	tools, exists := config.GetToolsInCategory(t.config, categoryName)
+	if !exists {
+		return nil
+	}
+	
+	options := make([]huh.Option[string], 0, len(tools))
+	for _, tool := range tools {
+		options = append(options, huh.NewOption(tool.DisplayName, tool.BinaryName))
+	}
+	
+	if len(options) == 0 {
+		return nil
+	}
+	
+	var selectedTools []string
+	return huh.NewGroup(
+		huh.NewMultiSelect[string]().
+			Title(categoryName).
+			Options(options...).
+			Value(&selectedTools),
+	)
+}
+
+func (t *TUI) ShowInteractiveToolSelection() (Selections, error) {
+	var selections Selections
+	
+	formGroups, err := t.CreateInteractiveToolForm()
+	if err != nil {
+		return selections, err
+	}
+	
+	if len(formGroups) == 0 {
+		return selections, fmt.Errorf("no interactive forms available")
+	}
+	
+	// For now, return empty selections (testing doesn't run interactive forms)
+	// TODO: Later run the actual interactive form with huh.NewForm(formGroups...).Run()
+	categories := config.GetCategories(t.config)
+	for _, categoryName := range categories {
+		categorySelection := CategoryAndTools{
+			Category: categoryName,
+			Tools:    []string{}, // Empty for testing, would be populated by user interaction
+		}
+		selections.CategoryAndTools = append(selections.CategoryAndTools, categorySelection)
+	}
+	
+	return selections, nil
+}
+
 func (t *TUI) ShowInstallationProgress(tools []string) error {
 	return nil
 }

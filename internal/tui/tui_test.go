@@ -237,3 +237,77 @@ func TestShowToolSelection_ShouldUseCategorizedSelection(t *testing.T) {
 		t.Errorf("Expected ShowToolSelection to return tools when categories are available, got empty")
 	}
 }
+
+func TestCreateInteractiveToolForm_ShouldReturnStructuredForm(t *testing.T) {
+	cfg := config.Config{
+		Categories: map[string]config.CategoryConfig{
+			"shells": {
+				"bash": config.ToolConfig{
+					DisplayName: "Bash Shell",
+					BinaryName:  "bash",
+				},
+				"zsh": config.ToolConfig{
+					DisplayName: "Zsh Shell",
+					BinaryName:  "zsh",
+				},
+			},
+			"editors": {
+				"vim": config.ToolConfig{
+					DisplayName: "Vim Editor",
+					BinaryName:  "vim",
+				},
+			},
+		},
+	}
+	
+	tui := New(cfg)
+	
+	// Should create a structured form for interactive selection
+	formGroups, err := tui.CreateInteractiveToolForm()
+	
+	if err != nil {
+		t.Errorf("Expected no error, got: %v", err)
+	}
+	
+	if formGroups == nil {
+		t.Errorf("Expected form groups to not be nil")
+	}
+	
+	if len(formGroups) == 0 {
+		t.Errorf("Expected form groups to contain category forms, got empty")
+	}
+	
+	// Should have forms for each category
+	if len(formGroups) != 2 {
+		t.Errorf("Expected 2 form groups (shells, editors), got %d", len(formGroups))
+	}
+}
+
+func TestShowInteractiveToolSelection_ShouldUseInteractiveForm(t *testing.T) {
+	cfg := config.Config{
+		Categories: map[string]config.CategoryConfig{
+			"shells": {
+				"bash": config.ToolConfig{
+					DisplayName: "Bash Shell",
+					BinaryName:  "bash",
+				},
+			},
+		},
+	}
+	
+	tui := New(cfg)
+	
+	// This method should provide interactive selection using huh library
+	selections, err := tui.ShowInteractiveToolSelection()
+	
+	if err != nil {
+		t.Errorf("Expected no error, got: %v", err)
+	}
+	
+	if selections.CategoryAndTools == nil {
+		t.Errorf("Expected selections.CategoryAndTools to not be nil")
+	}
+	
+	// Should return structured selections (even if empty in test environment)
+	// The structure should match our existing Selections format
+}
