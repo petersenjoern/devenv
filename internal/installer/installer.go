@@ -26,7 +26,10 @@ type APTInstaller struct {
 	CommandExecutor CommandExecutor
 }
 
-type ScriptInstaller struct{}
+type ScriptInstaller struct {
+	CommandExecutor CommandExecutor
+}
+
 type ManualInstaller struct{}
 
 func NewAPTInstaller() *APTInstaller {
@@ -35,9 +38,16 @@ func NewAPTInstaller() *APTInstaller {
 	}
 }
 
+func NewScriptInstaller() *ScriptInstaller {
+	return &ScriptInstaller{
+		CommandExecutor: &RealCommandExecutor{},
+	}
+}
+
 const (
-	aptUpdateCmd  = "sudo apt update"
-	aptInstallCmd = "sudo apt install -y %s"
+	aptUpdateCmd    = "sudo apt update"
+	aptInstallCmd   = "sudo apt install -y %s"
+	scriptInstallCmd = "bash %s"
 )
 
 func (a *APTInstaller) Install(tool config.ToolConfig) error {
@@ -54,6 +64,15 @@ func (a *APTInstaller) Install(tool config.ToolConfig) error {
 }
 
 func (s *ScriptInstaller) Install(tool config.ToolConfig) error {
+	if tool.InstallScript == "" {
+		return fmt.Errorf("install script path is required for script installation method")
+	}
+
+	scriptCmd := fmt.Sprintf(scriptInstallCmd, tool.InstallScript)
+	if err := s.CommandExecutor.Execute(scriptCmd); err != nil {
+		return fmt.Errorf("failed to execute install script %s: %w", tool.InstallScript, err)
+	}
+
 	return nil
 }
 
