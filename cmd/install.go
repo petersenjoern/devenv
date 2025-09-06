@@ -69,6 +69,7 @@ func CreateInstallTUI() (*tui.TUI, error) {
 	return nil, fmt.Errorf("config file not found, tried: %v", configPaths)
 }
 
+// potentially delete this function as it's not used anywhere else
 func RunInstallFlowWithConfig(configPath string) (InstallResult, error) {
 	var result InstallResult
 

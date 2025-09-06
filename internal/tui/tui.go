@@ -22,6 +22,11 @@ type CategoryAndTools struct {
 	Tools    []string
 }
 
+type InteractiveForm struct {
+	groups             []*huh.Group
+	categorySelections map[string]*[]string
+}
+
 func New(cfg config.Config) *TUI {
 	return &TUI{
 		config: cfg,
@@ -118,27 +123,36 @@ func (t *TUI) buildCategorySelection(categoryName string) CategoryAndTools {
 	return categorySelection
 }
 
-func (t *TUI) CreateInteractiveToolForm() ([]*huh.Group, map[string]*[]string, error) {
-	formGroups := make([]*huh.Group, 0)
-	categorySelections := make(map[string]*[]string)
+func (t *TUI) createInteractiveForm() (*InteractiveForm, error) {
+	form := &InteractiveForm{
+		groups:             make([]*huh.Group, 0),
+		categorySelections: make(map[string]*[]string),
+	}
 
 	categories := config.GetCategories(t.config)
 	if len(categories) == 0 {
-		return formGroups, categorySelections, fmt.Errorf("no categories found in config")
+		return nil, fmt.Errorf("no categories found in config")
 	}
 
 	for _, categoryName := range categories {
-		// Create a selection slice for this category
 		selectedTools := make([]string, 0)
-		categorySelections[categoryName] = &selectedTools
+		form.categorySelections[categoryName] = &selectedTools
 
 		group := t.createCategoryFormGroup(categoryName, &selectedTools)
 		if group != nil {
-			formGroups = append(formGroups, group)
+			form.groups = append(form.groups, group)
 		}
 	}
 
-	return formGroups, categorySelections, nil
+	return form, nil
+}
+
+func (t *TUI) CreateInteractiveToolForm() ([]*huh.Group, map[string]*[]string, error) {
+	form, err := t.createInteractiveForm()
+	if err != nil {
+		return nil, nil, err
+	}
+	return form.groups, form.categorySelections, nil
 }
 
 func (t *TUI) createCategoryFormGroup(categoryName string, selectedTools *[]string) *huh.Group {
@@ -170,34 +184,38 @@ func (t *TUI) ShowInteractiveToolSelection() (Selections, error) {
 }
 
 func (t *TUI) RunInteractiveFormWithDefaults() (Selections, error) {
-	formGroups, categorySelections, err := t.CreateInteractiveToolForm()
+	form, err := t.createInteractiveForm()
 	if err != nil {
 		return Selections{}, err
 	}
 
-	return t.ExecuteInteractiveForm(formGroups, categorySelections)
+	return t.executeForm(form)
 }
 
-func (t *TUI) ExecuteInteractiveForm(formGroups []*huh.Group, categorySelections map[string]*[]string) (Selections, error) {
-	var selections Selections
-
-	if len(formGroups) == 0 {
-		return selections, fmt.Errorf("no interactive forms available")
+func (t *TUI) executeForm(form *InteractiveForm) (Selections, error) {
+	if len(form.groups) == 0 {
+		return Selections{}, fmt.Errorf("no interactive forms available")
 	}
 
-	// Check if we're in a test environment or non-interactive context In test environments, return structured
-	// selections with all available tools
 	if t.isTestEnvironment() {
 		return t.createDefaultSelections(), nil
 	}
 
-	form := huh.NewForm(formGroups...)
-	err := form.Run()
+	huhForm := huh.NewForm(form.groups...)
+	err := huhForm.Run()
 	if err != nil {
-		return selections, fmt.Errorf("failed to run interactive form: %w", err)
+		return Selections{}, fmt.Errorf("failed to run interactive form: %w", err)
 	}
 
-	return t.extractSelectionsFromCategoryMap(categorySelections)
+	return form.extractSelections()
+}
+
+func (t *TUI) ExecuteInteractiveForm(formGroups []*huh.Group, categorySelections map[string]*[]string) (Selections, error) {
+	form := &InteractiveForm{
+		groups:             formGroups,
+		categorySelections: categorySelections,
+	}
+	return t.executeForm(form)
 }
 
 func (t *TUI) isTestEnvironment() bool {
@@ -242,10 +260,10 @@ func (t *TUI) createDefaultSelections() Selections {
 	return selections
 }
 
-func (t *TUI) extractSelectionsFromCategoryMap(categorySelections map[string]*[]string) (Selections, error) {
+func (form *InteractiveForm) extractSelections() (Selections, error) {
 	var selections Selections
 
-	for categoryName, selectedToolsPtr := range categorySelections {
+	for categoryName, selectedToolsPtr := range form.categorySelections {
 		categorySelection := CategoryAndTools{
 			Category: categoryName,
 			Tools:    *selectedToolsPtr,
@@ -254,8 +272,4 @@ func (t *TUI) extractSelectionsFromCategoryMap(categorySelections map[string]*[]
 	}
 
 	return selections, nil
-}
-
-func (t *TUI) ShowInstallationProgress(tools []string) error {
-	return nil
 }
