@@ -48,6 +48,12 @@ const (
 	aptUpdateCmd    = "sudo apt update"
 	aptInstallCmd   = "sudo apt install -y %s"
 	scriptInstallCmd = "bash %s"
+	
+	// Manual installer message templates
+	manualInstallMsg     = "Manual installation required for %s (%s)"
+	manualInstructionsMsg = "Installation instructions:\n%s"
+	manualFallbackMsg    = "No specific installation instructions provided. Please install %s manually."
+	manualVerifyMsg      = "Please complete the installation manually and run 'devenv status' to verify."
 )
 
 func (a *APTInstaller) Install(tool config.ToolConfig) error {
@@ -77,5 +83,14 @@ func (s *ScriptInstaller) Install(tool config.ToolConfig) error {
 }
 
 func (m *ManualInstaller) Install(tool config.ToolConfig) error {
+	fmt.Printf(manualInstallMsg+"\n", tool.DisplayName, tool.BinaryName)
+	
+	if tool.WSLNotes != "" {
+		fmt.Printf(manualInstructionsMsg+"\n", tool.WSLNotes)
+	} else {
+		fmt.Printf(manualFallbackMsg+"\n", tool.DisplayName)
+	}
+	
+	fmt.Println(manualVerifyMsg)
 	return nil
 }
