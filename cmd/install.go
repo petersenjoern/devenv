@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/petersenjoern/devenv/internal/config"
+	"github.com/petersenjoern/devenv/internal/installer"
 	"github.com/petersenjoern/devenv/internal/tui"
 	"github.com/spf13/cobra"
 )
@@ -100,6 +101,43 @@ func createTUIFromConfig(configPath string) (*tui.TUI, error) {
 	}
 
 	return tui.New(cfg), nil
+}
+
+func ExecuteInstallations(selections tui.Selections, configPath string) (map[string]installer.InstallationResult, error) {
+	toolConfigs, err := LoadToolConfigurations(configPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load tool configurations: %w", err)
+	}
+
+	orchestrator := CreateInstallationOrchestrator()
+
+	results := orchestrator.ExecuteInstallations(selections, toolConfigs)
+
+	return results, nil
+}
+
+func LoadToolConfigurations(configPath string) (map[string]config.ToolConfig, error) {
+	cfg, err := config.LoadConfig(configPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load config: %w", err)
+	}
+
+	toolConfigs := make(map[string]config.ToolConfig)
+	for _, category := range cfg.Categories {
+		for toolName, toolConfig := range category {
+			toolConfigs[toolName] = toolConfig
+		}
+	}
+
+	return toolConfigs, nil
+}
+
+func CreateInstallationOrchestrator() *installer.InstallationOrchestrator {
+	return &installer.InstallationOrchestrator{
+		APTInstaller:    installer.NewAPTInstaller(),    // Real APT command execution
+		ScriptInstaller: installer.NewScriptInstaller(), // Real script execution
+		ManualInstaller: &installer.ManualInstaller{},   // User instruction display
+	}
 }
 
 func init() {
