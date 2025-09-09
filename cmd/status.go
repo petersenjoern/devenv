@@ -28,16 +28,16 @@ Use --verbose flag for detailed output.`,
 
 func GenerateStatusTable(cfg config.Config, det *detector.Detector, verbose bool) string {
 	var output strings.Builder
-	
+
 	writeHeader(&output, verbose)
-	
+
 	for _, categoryTools := range cfg.Categories {
 		for _, tool := range categoryTools {
 			status := det.DetectTool(tool)
 			writeToolRow(&output, tool, status, verbose)
 		}
 	}
-	
+
 	return output.String()
 }
 
@@ -55,7 +55,7 @@ func writeToolRow(output *strings.Builder, tool config.ToolConfig, status detect
 	binaryStatus := formatStatus(status.BinaryInstalled)
 	configStatus := formatStatus(status.ConfigApplied)
 	version := formatValue(status.Version)
-	
+
 	if verbose {
 		path := formatValue(status.Path)
 		output.WriteString(fmt.Sprintf("%-18s %-9s %-9s %-14s %s\n",

@@ -57,7 +57,7 @@ func TestManualInstaller_ShouldHandleEmptyInstructions(t *testing.T) {
 
 func TestManualInstaller_ShouldNotExecuteSystemCommands(t *testing.T) {
 	// Test that ManualInstaller never executes system commands unlike APT/Script installers
-	
+
 	// Create a spy to track if any commands would have been executed
 	// We'll verify this by ensuring ManualInstaller doesn't have a CommandExecutor field
 	installer := &ManualInstaller{}
