@@ -2,8 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"io"
-	"os"
 	"strings"
 	"testing"
 
@@ -167,18 +165,48 @@ func TestInstallCommand_ShouldCountSelectedTools(t *testing.T) {
 		},
 	}
 
-	configPath, err := findConfigPath()
-	if err != nil {
-		t.Skipf("No config file found for testing, skipping: %v", err)
-		return
+	// Use mock tool configs instead of loading from real config
+	mockToolConfigs := map[string]config.ToolConfig{
+		"git": {
+			DisplayName:   "Git Version Control",
+			BinaryName:    "git",
+			InstallMethod: "apt",
+			PackageName:   "git",
+		},
+		"mercurial": {
+			DisplayName:   "Mercurial Version Control",
+			BinaryName:    "hg",
+			InstallMethod: "apt",
+			PackageName:   "mercurial",
+		},
+		"vim": {
+			DisplayName:   "Vim Editor",
+			BinaryName:    "vim",
+			InstallMethod: "apt",
+			PackageName:   "vim",
+		},
+		"emacs": {
+			DisplayName:   "Emacs Editor",
+			BinaryName:    "emacs",
+			InstallMethod: "apt",
+			PackageName:   "emacs",
+		},
+		"nano": {
+			DisplayName:   "Nano Editor",
+			BinaryName:    "nano",
+			InstallMethod: "apt",
+			PackageName:   "nano",
+		},
 	}
 
-	// Execute installations to get actual results count
-	results, err := ExecuteInstallations(mockSelections, configPath)
-	if err != nil {
-		t.Errorf("Expected no error executing installations, got: %v", err)
-		return
+	orchestrator := &installer.InstallationOrchestrator{
+		APTInstaller:    &installer.APTInstaller{CommandExecutor: &MockCommandExecutor{}},
+		ScriptInstaller: &installer.ScriptInstaller{CommandExecutor: &MockCommandExecutor{}},
+		ManualInstaller: &installer.ManualInstaller{},
 	}
+
+	// Execute installations with mocked orchestrator
+	results := orchestrator.ExecuteInstallations(mockSelections, mockToolConfigs)
 
 	// Test that the actual implementation counts tools correctly
 	expectedTotal := 5 // 2 version control + 3 editors
@@ -295,39 +323,4 @@ func TestInstallCommand_ShouldProvideSuccessGuidanceOnAllSuccess(t *testing.T) {
 	if strings.Contains(outputStr, "Some installations failed") {
 		t.Errorf("Should not show failure guidance on all success, got: %s", outputStr)
 	}
-}
-
-// outputCapture encapsulates stdout capture and restoration logic
-type outputCapture struct {
-	originalStdout *os.File
-	reader         *os.File
-	writer         *os.File
-	done           chan bool
-}
-
-// captureOutput starts capturing stdout and returns a handle for restoration
-func captureOutput(output *strings.Builder) *outputCapture {
-	originalStdout := os.Stdout
-	r, w, _ := os.Pipe()
-	os.Stdout = w
-
-	done := make(chan bool)
-	go func() {
-		io.Copy(output, r)
-		done <- true
-	}()
-
-	return &outputCapture{
-		originalStdout: originalStdout,
-		reader:         r,
-		writer:         w,
-		done:           done,
-	}
-}
-
-// restore restores original stdout
-func (oc *outputCapture) restore() {
-	oc.writer.Close()
-	<-oc.done // Wait for the goroutine to finish copying
-	os.Stdout = oc.originalStdout
 }

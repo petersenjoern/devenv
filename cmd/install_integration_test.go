@@ -10,20 +10,6 @@ import (
 	"github.com/petersenjoern/devenv/internal/tui"
 )
 
-type MockCommandExecutor struct {
-	ExecutedCommands []string
-	ShouldFail       bool
-	FailureError     error
-}
-
-func (m *MockCommandExecutor) Execute(command string) error {
-	m.ExecutedCommands = append(m.ExecutedCommands, command)
-	if m.ShouldFail {
-		return m.FailureError
-	}
-	return nil
-}
-
 func CreateTestInstallationOrchestrator() *installer.InstallationOrchestrator {
 	return &installer.InstallationOrchestrator{
 		APTInstaller:    &installer.APTInstaller{CommandExecutor: &MockCommandExecutor{}},
