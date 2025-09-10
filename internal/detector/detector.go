@@ -23,7 +23,7 @@ func New() *Detector {
 
 func (d *Detector) DetectTool(tool config.ToolConfig) Status {
 	path, err := exec.LookPath(tool.BinaryName)
-	
+
 	if err != nil {
 		return Status{
 			BinaryInstalled: false,
@@ -56,13 +56,13 @@ func (d *Detector) GetVersion(binaryName string) string {
 	if err != nil {
 		return "unknown"
 	}
-	
+
 	version := strings.TrimSpace(string(output))
 	lines := strings.Split(version, "\n")
 	if len(lines) > 0 {
 		return strings.TrimSpace(lines[0])
 	}
-	
+
 	return "unknown"
 }
 
@@ -70,7 +70,7 @@ func (d *Detector) IsConfigExisting(configPath string) bool {
 	if configPath == "" {
 		return false
 	}
-	
+
 	_, err := os.Stat(configPath)
 	return err == nil
 }
