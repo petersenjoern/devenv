@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/petersenjoern/devenv/internal/config"
+	"github.com/petersenjoern/devenv/internal/detector"
 	"github.com/petersenjoern/devenv/internal/installer"
 	"github.com/petersenjoern/devenv/internal/tui"
 	"github.com/spf13/cobra"
@@ -55,7 +56,16 @@ then displays categorized tool selection with dependency resolution.`,
 			return
 		}
 
-		results, err := ExecuteInstallations(selections, configPath)
+		cfg, err := config.LoadConfig(configPath)
+		if err != nil {
+			fmt.Printf("Error loading config: %v\n", err)
+			return
+		}
+
+		detector := detector.New()
+		toolsWithStatus := GetAllToolsStatus(cfg, detector)
+
+		results, err := ExecuteInstallations(selections, cfg, toolsWithStatus)
 		if err != nil {
 			fmt.Printf("Error executing installations: %v\n", err)
 			return
@@ -127,33 +137,32 @@ func createTUIFromConfig(configPath string) (*tui.TUI, error) {
 	return tui.New(cfg), nil
 }
 
-func ExecuteInstallations(selections tui.Selections, configPath string) (map[string]installer.InstallationResult, error) {
-	toolConfigs, err := LoadToolConfigurations(configPath)
-	if err != nil {
-		return nil, fmt.Errorf("failed to load tool configurations: %w", err)
+func ExecuteInstallations(selections tui.Selections, cfg config.Config, toolsWithStatus map[string]map[detector.Status]config.ToolConfig) (map[string]installer.InstallationResult, error) {
+
+	toolConfigs := configToToolConfig(cfg)
+	orchestrator := CreateInstallationOrchestrator()
+	alreadyInstalledTools := []string{}
+	for toolName, statusMap := range toolsWithStatus {
+		for status := range statusMap {
+			if status.BinaryInstalled == true {
+				alreadyInstalledTools = append(alreadyInstalledTools, toolName)
+			}
+		}
 	}
 
-	orchestrator := CreateInstallationOrchestrator()
-
-	results := orchestrator.ExecuteInstallations(selections, toolConfigs)
+	results := orchestrator.ExecuteInstallations(selections, toolConfigs, alreadyInstalledTools)
 
 	return results, nil
 }
 
-func LoadToolConfigurations(configPath string) (map[string]config.ToolConfig, error) {
-	cfg, err := config.LoadConfig(configPath)
-	if err != nil {
-		return nil, fmt.Errorf("failed to load config: %w", err)
-	}
-
+func configToToolConfig(cfg config.Config) map[string]config.ToolConfig {
 	toolConfigs := make(map[string]config.ToolConfig)
 	for _, category := range cfg.Categories {
 		for toolName, toolConfig := range category {
 			toolConfigs[toolName] = toolConfig
 		}
 	}
-
-	return toolConfigs, nil
+	return toolConfigs
 }
 
 func CreateInstallationOrchestrator() *installer.InstallationOrchestrator {

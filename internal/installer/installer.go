@@ -108,20 +108,43 @@ type InstallationResult struct {
 	Error   error
 }
 
-func (o *InstallationOrchestrator) ExecuteInstallations(selections tui.Selections, tools map[string]config.ToolConfig) map[string]InstallationResult {
+func (o *InstallationOrchestrator) ExecuteInstallations(selections tui.Selections, allTools map[string]config.ToolConfig, installedTools []string) map[string]InstallationResult {
 	results := make(map[string]InstallationResult)
 
 	selectedTools := o.extractSelectedTools(selections)
+	fmt.Printf("Selected tools for installation: %v\n", selectedTools)
 
-	installOrder := o.resolveDependencies(selectedTools, tools)
+	completeInstallOrder := o.resolveDependencies(selectedTools, allTools)
+	fmt.Printf("Complete installation order (including tool dependencies): %v\n", completeInstallOrder)
+
+	fmt.Printf("Already installed tools on your system: %v\n", installedTools)
+
+	installOrder := o.removeInstalledTools(installedTools, completeInstallOrder)
+	fmt.Printf("Final installation order (excluding already installed): %v\n", installOrder)
 
 	for _, toolName := range installOrder {
-		tool := tools[toolName]
+		tool := allTools[toolName]
 		result := o.installTool(tool)
 		results[toolName] = result
 	}
 
 	return results
+}
+
+func (*InstallationOrchestrator) removeInstalledTools(installedTools []string, installOrder []string) []string {
+	filteredInstallOrder := []string{}
+	installedSet := make(map[string]struct{})
+	for _, tool := range installedTools {
+		installedSet[tool] = struct{}{}
+	}
+
+	for _, tool := range installOrder {
+		if _, alreadyInstalled := installedSet[tool]; !alreadyInstalled {
+			filteredInstallOrder = append(filteredInstallOrder, tool)
+		}
+	}
+	installOrder = filteredInstallOrder
+	return installOrder
 }
 
 func (o *InstallationOrchestrator) extractSelectedTools(selections tui.Selections) []string {

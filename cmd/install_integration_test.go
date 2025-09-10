@@ -40,8 +40,10 @@ func TestInstallCommand_ShouldExecuteInstallationsAfterTUISelection(t *testing.T
 		},
 	}
 
+	alreadyInstalled := []string{}
+
 	orchestrator := CreateTestInstallationOrchestrator()
-	results := orchestrator.ExecuteInstallations(mockSelections, mockToolConfigs)
+	results := orchestrator.ExecuteInstallations(mockSelections, mockToolConfigs, alreadyInstalled)
 	if len(results) == 0 {
 		t.Errorf("Expected installation execution to succeed")
 	}
@@ -57,38 +59,6 @@ func TestInstallCommand_ShouldExecuteInstallationsAfterTUISelection(t *testing.T
 
 	if gitResult.Tool.BinaryName != "git" {
 		t.Errorf("Expected git tool in result, got %s", gitResult.Tool.BinaryName)
-	}
-}
-
-func TestInstallCommand_ShouldLoadToolConfigurationsForOrchestrator(t *testing.T) {
-	// Test that install command properly loads tool configurations from config file
-	configPath := "../config.yaml"
-
-	var toolConfigs map[string]config.ToolConfig
-	var err error
-
-	toolConfigs, err = LoadToolConfigurations(configPath)
-
-	if err != nil {
-		t.Skipf("Could not load config file from any path, skipping test: %v", err)
-		return
-	}
-
-	if len(toolConfigs) == 0 {
-		t.Errorf("Expected tool configurations to be loaded from config")
-	}
-
-	hasValidTool := false
-	for toolName, toolConfig := range toolConfigs {
-		if toolConfig.InstallMethod != "" && toolConfig.BinaryName != "" {
-			hasValidTool = true
-			t.Logf("Found valid tool: %s with install method: %s", toolName, toolConfig.InstallMethod)
-			break
-		}
-	}
-
-	if !hasValidTool {
-		t.Errorf("Expected at least one tool with valid configuration")
 	}
 }
 
@@ -133,6 +103,8 @@ func TestInstallCommand_ShouldDisplayInstallationProgress(t *testing.T) {
 		},
 	}
 
+	alreadyInstalled := []string{}
+
 	// Capture output during installation
 	var outputBuffer strings.Builder
 
@@ -142,7 +114,7 @@ func TestInstallCommand_ShouldDisplayInstallationProgress(t *testing.T) {
 	fmt.Fprintf(&outputBuffer, "Starting installation process...\n")
 	fmt.Fprintf(&outputBuffer, "Installing selected tools...\n")
 
-	results := orchestrator.ExecuteInstallations(mockSelections, mockToolConfigs)
+	results := orchestrator.ExecuteInstallations(mockSelections, mockToolConfigs, alreadyInstalled)
 
 	for toolName, result := range results {
 		if result.Success {
@@ -194,6 +166,8 @@ func TestInstallCommand_ShouldHandleInstallationFailuresGracefully(t *testing.T)
 		},
 	}
 
+	alreadyInstalled := []string{}
+
 	// Create orchestrator with failing mock executor for first tool
 	failingMockExecutor := &MockCommandExecutor{
 		ShouldFail:   true,
@@ -207,7 +181,7 @@ func TestInstallCommand_ShouldHandleInstallationFailuresGracefully(t *testing.T)
 		ManualInstaller: &installer.ManualInstaller{},
 	}
 
-	results := orchestrator.ExecuteInstallations(mockSelections, mockToolConfigs)
+	results := orchestrator.ExecuteInstallations(mockSelections, mockToolConfigs, alreadyInstalled)
 
 	// Should have results for both tools
 	if len(results) != 2 {

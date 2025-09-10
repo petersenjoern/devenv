@@ -52,15 +52,28 @@ func executeStatusCommand(verbose bool) error {
 	return nil
 }
 
+func GetAllToolsStatus(cfg config.Config, det *detector.Detector) map[string]map[detector.Status]config.ToolConfig {
+
+	toolsWithStatus := make(map[string]map[detector.Status]config.ToolConfig)
+	for _, categoryTools := range cfg.Categories {
+		for _, tool := range categoryTools {
+			status := det.DetectTool(tool)
+			toolsWithStatus[tool.BinaryName] = map[detector.Status]config.ToolConfig{status: tool}
+		}
+	}
+	return toolsWithStatus
+
+}
+
 func GenerateStatusTable(cfg config.Config, det *detector.Detector, verbose bool) string {
 	var output strings.Builder
 
 	writeHeader(&output, verbose)
+	toolsWithStatus := GetAllToolsStatus(cfg, det)
 
-	for _, categoryTools := range cfg.Categories {
-		for _, tool := range categoryTools {
-			status := det.DetectTool(tool)
-			writeToolRow(&output, tool, status, verbose)
+	for _, status := range toolsWithStatus {
+		for k, v := range status {
+			writeToolRow(&output, v, k, verbose)
 		}
 	}
 

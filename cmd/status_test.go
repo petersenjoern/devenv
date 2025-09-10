@@ -38,6 +38,40 @@ func TestStatusCommand_ShouldDisplayTableWithToolStatus(t *testing.T) {
 	}
 }
 
+func TestStatusCommand_ShouldGetToolsWithStatus(t *testing.T) {
+	cfg := config.Config{
+		Categories: map[string]config.CategoryConfig{
+			"shells": {
+				"bash": config.ToolConfig{
+					DisplayName: "Bash Shell",
+					BinaryName:  "bash",
+					ConfigPath:  "/etc/bash.bashrc",
+				},
+			},
+			"editors": {
+				"vim": config.ToolConfig{
+					DisplayName: "Vim Editor",
+					BinaryName:  "vim",
+					ConfigPath:  "/etc/vim/vimrc",
+				},
+			},
+		},
+	}
+
+	detector := detector.New()
+	toolsStatus := GetAllToolsStatus(cfg, detector)
+
+	if len(toolsStatus) != 2 {
+		t.Errorf("Expected 2 tools with status, got %d", len(toolsStatus))
+	}
+
+	if _, exists := toolsStatus["bash"]; !exists {
+		t.Errorf("Expected 'bash' tool in status map")
+	}
+	if _, exists := toolsStatus["vim"]; !exists {
+		t.Errorf("Expected 'vim' tool in status map")
+	}
+}
 func TestStatusCommand_ShouldDisplayVerboseOutput(t *testing.T) {
 	cfg := config.Config{
 		Categories: map[string]config.CategoryConfig{

@@ -111,19 +111,24 @@ func TestInstallCommand_ShouldHandleNoToolsSelected(t *testing.T) {
 		CategoryAndTools: []tui.CategoryAndTools{},
 	}
 
-	configPath, err := findConfigPath()
-	if err != nil {
-		t.Skipf("No config file found for testing, skipping: %v", err)
-		return
+	mockToolConfigs := map[string]config.ToolConfig{
+		"git": {
+			DisplayName:   "Git Version Control",
+			BinaryName:    "git",
+			InstallMethod: "apt",
+			PackageName:   "git",
+		},
 	}
 
+	alreadyInstalled := []string{}
+
+	orchestrator := &installer.InstallationOrchestrator{
+		APTInstaller:    &installer.APTInstaller{CommandExecutor: &MockCommandExecutor{}},
+		ScriptInstaller: &installer.ScriptInstaller{CommandExecutor: &MockCommandExecutor{}},
+		ManualInstaller: &installer.ManualInstaller{},
+	}
 	// Execute installations with empty selections
-	results, err := ExecuteInstallations(emptySelections, configPath)
-
-	// Should not return error even with no selections
-	if err != nil {
-		t.Errorf("Expected no error with empty selections, got: %v", err)
-	}
+	results := orchestrator.ExecuteInstallations(emptySelections, mockToolConfigs, alreadyInstalled)
 
 	// Should return empty results map
 	if len(results) != 0 {
@@ -199,6 +204,8 @@ func TestInstallCommand_ShouldCountSelectedTools(t *testing.T) {
 		},
 	}
 
+	mockAlreadyInstalled := []string{}
+
 	orchestrator := &installer.InstallationOrchestrator{
 		APTInstaller:    &installer.APTInstaller{CommandExecutor: &MockCommandExecutor{}},
 		ScriptInstaller: &installer.ScriptInstaller{CommandExecutor: &MockCommandExecutor{}},
@@ -206,7 +213,7 @@ func TestInstallCommand_ShouldCountSelectedTools(t *testing.T) {
 	}
 
 	// Execute installations with mocked orchestrator
-	results := orchestrator.ExecuteInstallations(mockSelections, mockToolConfigs)
+	results := orchestrator.ExecuteInstallations(mockSelections, mockToolConfigs, mockAlreadyInstalled)
 
 	// Test that the actual implementation counts tools correctly
 	expectedTotal := 5 // 2 version control + 3 editors

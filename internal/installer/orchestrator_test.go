@@ -28,7 +28,7 @@ func TestOrchestrator_ShouldRouteToolsToCorrectInstallers(t *testing.T) {
 		},
 	}
 
-	tools := map[string]config.ToolConfig{
+	allTools := map[string]config.ToolConfig{
 		"git": {
 			DisplayName:   "Git Version Control",
 			BinaryName:    "git",
@@ -45,12 +45,16 @@ func TestOrchestrator_ShouldRouteToolsToCorrectInstallers(t *testing.T) {
 		},
 	}
 
-	results := orchestrator.ExecuteInstallations(selections, tools)
+	installedTools := []string{}
+
+	results := orchestrator.ExecuteInstallations(selections, allTools, installedTools)
 
 	// Should have results for both tools
 	if len(results) != 2 {
 		t.Errorf("Expected 2 installation results, got %d", len(results))
 	}
+
+	fmt.Printf("results: %+v\n", results)
 
 	// Should have used APT installer for git
 	expectedAPTCommands := []string{"sudo apt update", "sudo apt install -y git"}
@@ -84,7 +88,7 @@ func TestOrchestrator_ShouldHandleDependencyOrdering(t *testing.T) {
 		},
 	}
 
-	tools := map[string]config.ToolConfig{
+	allTools := map[string]config.ToolConfig{
 		"curl": {
 			DisplayName:   "Curl HTTP Client",
 			BinaryName:    "curl",
@@ -108,7 +112,9 @@ func TestOrchestrator_ShouldHandleDependencyOrdering(t *testing.T) {
 		},
 	}
 
-	results := orchestrator.ExecuteInstallations(selections, tools)
+	installedTools := []string{}
+
+	results := orchestrator.ExecuteInstallations(selections, allTools, installedTools)
 
 	// Should install curl first (apt), then docker (script), then lazydocker (script)
 	if len(results) != 3 {
@@ -188,7 +194,7 @@ func TestOrchestrator_ShouldCollectInstallationResults(t *testing.T) {
 		},
 	}
 
-	tools := map[string]config.ToolConfig{
+	allTools := map[string]config.ToolConfig{
 		"git": {
 			DisplayName:   "Git Version Control",
 			BinaryName:    "git",
@@ -196,9 +202,17 @@ func TestOrchestrator_ShouldCollectInstallationResults(t *testing.T) {
 			PackageName:   "git",
 			Dependencies:  []string{},
 		},
+		"docker": {
+			DisplayName:   "Docker Engine",
+			BinaryName:    "docker",
+			InstallMethod: "script",
+			InstallScript: "install_scripts/docker.sh",
+			Dependencies:  []string{"wget"},
+		},
 	}
 
-	results := orchestrator.ExecuteInstallations(selections, tools)
+	installedTools := []string{"docker"}
+	results := orchestrator.ExecuteInstallations(selections, allTools, installedTools)
 
 	// Should have result for git
 	gitResult, found := results["git"]
@@ -238,7 +252,7 @@ func TestOrchestrator_ShouldHandleInstallationFailures(t *testing.T) {
 		},
 	}
 
-	tools := map[string]config.ToolConfig{
+	allTools := map[string]config.ToolConfig{
 		"git": {
 			DisplayName:   "Git Version Control",
 			BinaryName:    "git",
@@ -248,7 +262,9 @@ func TestOrchestrator_ShouldHandleInstallationFailures(t *testing.T) {
 		},
 	}
 
-	results := orchestrator.ExecuteInstallations(selections, tools)
+	installedTools := []string{}
+
+	results := orchestrator.ExecuteInstallations(selections, allTools, installedTools)
 
 	// Should have result for git even though it failed
 	gitResult, found := results["git"]
@@ -284,7 +300,7 @@ func TestOrchestrator_ShouldHandleManualInstallations(t *testing.T) {
 		},
 	}
 
-	tools := map[string]config.ToolConfig{
+	allTools := map[string]config.ToolConfig{
 		"alacritty": {
 			DisplayName:   "Alacritty Terminal",
 			BinaryName:    "alacritty",
@@ -294,7 +310,9 @@ func TestOrchestrator_ShouldHandleManualInstallations(t *testing.T) {
 		},
 	}
 
-	results := orchestrator.ExecuteInstallations(selections, tools)
+	installedTools := []string{}
+
+	results := orchestrator.ExecuteInstallations(selections, allTools, installedTools)
 
 	// Should have result for alacritty
 	alacrittyResult, found := results["alacritty"]
