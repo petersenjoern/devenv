@@ -124,7 +124,7 @@ func ExecuteInstallations(selections tui.Selections, cfg config.Config, toolsWit
 	alreadyInstalledTools := []string{}
 	for toolName, statusMap := range toolsWithStatus {
 		for status := range statusMap {
-			if status.BinaryInstalled == true {
+			if status.BinaryInstalled {
 				alreadyInstalledTools = append(alreadyInstalledTools, toolName)
 			}
 		}
