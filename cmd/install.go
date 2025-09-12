@@ -29,8 +29,7 @@ var rootCmd = &cobra.Command{
 	Short: "DevEnv - Automated developer environment setup",
 	Long: `DevEnv is a comprehensive tool for automating the setup of
 development environments. It provides an interactive interface to
-install and configure various development tools, programming languages,
-and essential utilities needed for software development.`,
+install and configure various development tools and utilities.`,
 	Version: "0.1.0",
 	CompletionOptions: cobra.CompletionOptions{
 		DisableDefaultCmd: true,
@@ -44,11 +43,13 @@ var installCmd = &cobra.Command{
 First prompts for environment selection (WSL/Linux), 
 then displays categorized tool selection with dependency resolution.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		selections, err := RunInstallFlow()
+
+		installResult, err := RunInstallFlowWithConfig("./config.yaml")
 		if err != nil {
 			fmt.Printf("Error running install flow: %v\n", err)
 			return
 		}
+		fmt.Printf("Detected environment: %s\n", installResult.Environment)
 
 		configPath, err := findConfigPath()
 		if err != nil {
@@ -65,7 +66,7 @@ then displays categorized tool selection with dependency resolution.`,
 		detector := detector.New()
 		toolsWithStatus := GetAllToolsStatus(cfg, detector)
 
-		results, err := ExecuteInstallations(selections, cfg, toolsWithStatus)
+		results, err := ExecuteInstallations(installResult.Selections, cfg, toolsWithStatus)
 		if err != nil {
 			fmt.Printf("Error executing installations: %v\n", err)
 			return
@@ -84,27 +85,6 @@ type InstallResult struct {
 	Selections  tui.Selections
 }
 
-func RunInstallFlow() (tui.Selections, error) {
-	tuiInstance, err := CreateInstallTUI()
-	if err != nil {
-		return tui.Selections{}, err
-	}
-
-	return tuiInstance.ShowInteractiveToolSelection()
-}
-
-func CreateInstallTUI() (*tui.TUI, error) {
-	// CLI entry vs unittest entry
-
-	configPath, err := findConfigPath()
-	if err != nil {
-		return nil, err
-	}
-
-	return createTUIFromConfig(configPath)
-}
-
-// potentially delete this function as it's not used anywhere else
 func RunInstallFlowWithConfig(configPath string) (InstallResult, error) {
 	var result InstallResult
 
