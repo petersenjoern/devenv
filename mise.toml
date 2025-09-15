@@ -6,3 +6,98 @@ description = "install dependencies"
 run = [
     "go mod download",
 ]
+
+[tasks.build]
+run = ["go build -o ./bin/devenv"]
+
+
+[tasks.build-for-test]
+description = "Build devenv binary for testing"
+run = [
+	"go build -o devenv ",
+]
+
+
+[tasks.test]
+description = "Run all unit tests"
+run = [
+	"mise run test-unit",
+]
+
+[tasks.test-unit]
+description = "Run unit tests"
+run = [
+	"go test ./cmd/... ./internal/..."
+]
+
+[tasks.test-integration]
+description = "Run integration tests"
+depends = ["build-for-test"]
+run = [
+	"echo 'Running integration tests...'",
+	"cd test/integration && INTEGRATION_TESTS=1 go test -v -timeout 30m ./...",
+]
+
+[tasks.test-e2e]
+description = "Run E2E tests"
+depends = ["build-for-test"]
+run = [
+	"echo 'Running E2E tests...'",
+	"cd test/e2e && INTEGRATION_TESTS=1 go test -v -timeout 45m ./...",
+]
+
+[tasks.test-all]
+description = "Run all tests (unit, integration, e2e)"
+depends = ["test-unit", "test-integration", "test-e2e"]
+run = [
+	"echo 'All tests completed.'",
+]
+
+
+[tasks.setup-test-env]
+description = "Build Docker test images"
+run = [
+	"./test/scripts/build_test_images.sh",
+]
+
+[tasks.clean-test-env]
+description = "Clean up Docker test environment"
+run = [
+	"./test/scripts/cleanup_test_env.sh",
+]
+
+
+[tasks.clean]
+description = "Clean build artifacts"
+run = [
+	"rm -f devenv bin/devenv",
+	"go clean",
+]
+
+[tasks.fmt]
+description = "Format Go code"
+run = [
+	"go fmt ./...",
+]
+
+[tasks.lint]
+description = "Run golangci-lint"
+run = [
+	"golangci-lint run",
+]
+
+
+[tasks.ci-test]
+description = "Run CI tests (unit + integration)"
+depends = ["test-unit", "test-integration"]
+run = [
+	"echo 'CI tests completed.'",
+]
+
+
+[tasks.install-test-deps]
+description = "Install test dependencies"
+run = [
+	"go install github.com/stretchr/testify@latest",
+	"go mod tidy",
+]

@@ -18,7 +18,15 @@ rm -rf nvim-linux-x86_64 nvim.tar.gz
 cd -
 
 # Install supporting tools
-sudo apt install -y luarocks
+sudo apt -y install cmake gettext lua5.1 liblua5.1-0-dev
+git clone https://github.com/nvim-lua/plenary.nvim.git $HOME/repos/plenary
+
+cd tmp/
+wget https://luarocks.org/releases/luarocks-3.11.1.tar.gz
+tar zxpf luarocks-3.11.1.tar.gz
+cd luarocks-3.11.1
+./configure && make && sudo make install
+sudo luarocks install luacheck
 
 # Create nvim config directory if it doesn't exist
 mkdir -p ~/.config/nvim

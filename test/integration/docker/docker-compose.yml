@@ -1,0 +1,16 @@
+services:
+  ubuntu-test:
+    build:
+      context: ../../../
+      dockerfile: test/integration/docker/ubuntu/Dockerfile
+    container_name: devenv-test-ubuntu
+    volumes:
+      - ../../../:/workspace
+      - test-home-ubuntu:/home/testuser
+    working_dir: /workspace
+    environment:
+      - TEST_ENV=ubuntu
+    command: tail -f /dev/null
+
+volumes:
+  test-home-ubuntu:

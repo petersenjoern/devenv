@@ -6,7 +6,7 @@ categories:
       install_method: "manual"
       package_name: ""
       install_script: ""
-      config_path: "~/.config/alacritty/alacritty.yml"
+      config_path: "~/.config/alacritty/alacritty.toml"
       config_template: ""
       dependencies: []
       wsl_notes: "Install Alacritty on Windows host system. Download from https://github.com/alacritty/alacritty/releases"
@@ -37,17 +37,17 @@ categories:
 
     zsh_enhanced:
       display_name: "Zsh with Oh My Zsh"
-      binary_name: "zsh"
+      binary_name: ""
       install_method: "script"
       package_name: ""
-      install_script: "install_scripts/zsh.sh"
-      config_path: "~/.zshrc"
-      config_template: "templates/zsh.conf"
-      dependencies: ["git", "curl"]
+      install_script: "install_scripts/zsh_enhanced.sh"
+      config_path: ""
+      config_template: ""
+      dependencies: ["git", "curl", "zsh"]
       wsl_notes: ""
       post_install_steps:
         - "Use 'chsh -s $(which zsh)' to set as default shell"
-        - "Plugins: autosuggestions, syntax-highlighting, z"
+        - "Plugins: autosuggestions, syntax-highlighting"
         - "Theme: powerlevel10k (run 'p10k configure')"
 
   editors:
@@ -63,7 +63,7 @@ categories:
       wsl_notes: ""
 
     neovim:
-      display_name: "Neovim Editor"
+      display_name: "Neovim Editor with LayzVIM"
       binary_name: "nvim"
       install_method: "apt"
       package_name: "neovim"
@@ -73,21 +73,7 @@ categories:
       dependencies: []
       wsl_notes: ""
 
-    # TODO: review this with my current Neovim setup
-    neovim_improved:
-      display_name: "Neovim with LazyVim"
-      binary_name: "nvim"
-      install_method: "script"
-      package_name: ""
-      install_script: "install_scripts/neovim.sh"
-      config_path: "~/.config/nvim/init.lua"
-      config_template: ""
-      dependencies: ["git", "curl"]
-      required_packages: ["luarocks"]
-      wsl_notes: ""
-      post_install_steps:
-        - "LazyVim will auto-install plugins on first run"
-
+    # review
     vscode:
       display_name: "Visual Studio Code"
       binary_name: "code"
@@ -99,6 +85,7 @@ categories:
       dependencies: ["curl"]
       wsl_notes: "Install VS Code on Windows host system. Download from https://code.visualstudio.com/"
 
+  # review mise
   runtime_managers:
     mise:
       display_name: "Mise Runtime Manager"
@@ -111,23 +98,19 @@ categories:
       dependencies: []
       wsl_notes: ""
 
-    nvm:
-      display_name: "Node Version Manager"
-      binary_name: "nvm"
+  utilities:
+    # add ripgrep?
+    eza:
+      display_name: "Eza"
+      binary_name: "eza"
       install_method: "script"
       package_name: ""
-      install_script: "install_scripts/nvm.sh"
-      config_path: "~/.nvm"
+      install_script: ""
+      config_path: ""
       config_template: ""
-      dependencies: ["curl", "git"]
+      dependencies: ["gpg", "wget"]
       wsl_notes: ""
-      env_vars:
-        NVM_DIR: "$HOME/.nvm"
-      post_install_steps:
-        - "Source nvm in your shell configuration"
-        - "Use 'nvm install node' to install latest Node.js"
 
-  utilities:
     bat:
       display_name: "Bat (Better Cat)"
       binary_name: "bat"
@@ -153,15 +136,15 @@ categories:
     fzf:
       display_name: "FZF Fuzzy Finder"
       binary_name: "fzf"
-      install_method: "script"
+      install_method: "apt"
       package_name: ""
-      install_script: "install_scripts/fzf.sh"
+      install_script: ""
       config_path: ""
       config_template: ""
-      dependencies: ["git"]
+      dependencies: [""]
       wsl_notes: ""
       post_install_steps:
-        - "Source fzf key bindings in your shell"
+        - "source <(fzf --zsh) for zsh or eval $(fzf --bash) for bash"
 
     git:
       display_name: "Git Version Control"
@@ -173,19 +156,6 @@ categories:
       config_template: ""
       dependencies: []
       wsl_notes: ""
-
-    github_cli:
-      display_name: "GitHub CLI"
-      binary_name: "gh"
-      install_method: "script"
-      package_name: ""
-      install_script: "install_scripts/github-cli.sh"
-      config_path: "~/.config/gh"
-      config_template: ""
-      dependencies: ["curl"]
-      wsl_notes: ""
-      post_install_steps:
-        - "Use 'gh auth login' to authenticate"
 
     curl:
       display_name: "Curl HTTP Client"
@@ -201,9 +171,9 @@ categories:
     btop:
       display_name: "Btop System Monitor"
       binary_name: "btop"
-      install_method: "script"
-      package_name: ""
-      install_script: "install_scripts/btop.sh"
+      install_method: "apt"
+      package_name: "btop"
+      install_script: ""
       config_path: "~/.config/btop/btop.conf"
       config_template: ""
       dependencies: []
@@ -231,19 +201,6 @@ categories:
       dependencies: ["curl", "docker"]
       wsl_notes: ""
 
-    broot:
-      display_name: "Broot Tree Explorer"
-      binary_name: "broot"
-      install_method: "download"
-      package_name: ""
-      install_script: ""
-      config_path: "~/.config/broot/conf.hjson"
-      config_template: ""
-      dependencies: []
-      wsl_notes: ""
-      download_url: "https://dystroy.org/broot/download/x86_64-unknown-linux-gnu/broot"
-      install_location: "/usr/local/bin/broot"
-
   containerization:
     docker:
       display_name: "Docker Engine"
@@ -251,9 +208,9 @@ categories:
       install_method: "script"
       package_name: ""
       install_script: "install_scripts/docker.sh"
-      config_path: "/etc/docker/daemon.json"
+      config_path: ""
       config_template: ""
-      dependencies: ["curl", "wget"]
+      dependencies: ["ca-certificates", "curl"]
       wsl_notes: "Install docker inside WSL2."
       post_install_steps:
         - "Log out and back in for group permissions"

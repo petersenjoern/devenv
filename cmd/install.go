@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/petersenjoern/devenv/internal/config"
 	"github.com/petersenjoern/devenv/internal/detector"
@@ -36,21 +37,18 @@ install and configure various development tools and utilities.`,
 	},
 }
 
+var (
+	nonInteractive bool
+	toolsList      string
+)
+
 var installCmd = &cobra.Command{
 	Use:   "install",
 	Short: "Launch interactive installation of development tools",
-	Long: `Launch interactive TUI for tool selection and installation
-First prompts for environment selection (WSL/Linux), 
-then displays categorized tool selection with dependency resolution.`,
+	Long: `Launch interactive TUI for tool selection and installation. Displays categorized tool selection with
+	dependency resolution. Alternatively, use
+	--non-interactive with --tools to install specific tools without TUI.`,
 	Run: func(cmd *cobra.Command, args []string) {
-
-		installResult, err := RunInstallFlowWithConfig("./config.yaml")
-		if err != nil {
-			fmt.Printf("Error running install flow: %v\n", err)
-			return
-		}
-		fmt.Printf("Detected environment: %s\n", installResult.Environment)
-
 		configPath, err := findConfigPath()
 		if err != nil {
 			fmt.Printf("Error finding config: %v\n", err)
@@ -66,14 +64,80 @@ then displays categorized tool selection with dependency resolution.`,
 		detector := detector.New()
 		toolsWithStatus := GetAllToolsStatus(cfg, detector)
 
-		results, err := ExecuteInstallations(installResult.Selections, cfg, toolsWithStatus)
-		if err != nil {
-			fmt.Printf("Error executing installations: %v\n", err)
+		if nonInteractive {
+			// Non-interactive mode
+			if toolsList == "" {
+				fmt.Println("Error: --tools must be provided in non-interactive mode.")
+				return
+			}
+
+			// Parse toolsList (comma-separated) into Selections
+			selections, err := parseToolsToSelections(toolsList, cfg)
+			if err != nil {
+				fmt.Printf("Error parsing tools: %v\n", err)
+				return
+			}
+
+			results, err := ExecuteInstallations(selections, cfg, toolsWithStatus)
+			if err != nil {
+				fmt.Printf("Error executing installations: %v\n", err)
+				return
+			}
+			displayInstallationResults(results)
+			return
+		} else {
+
+			// Interactive mode (default)
+			installResult, err := RunInstallFlowWithConfig("./config.yaml")
+			if err != nil {
+				fmt.Printf("Error running install flow: %v\n", err)
+				return
+			}
+			fmt.Printf("Detected environment: %s\n", installResult.Environment)
+
+			results, err := ExecuteInstallations(installResult.Selections, cfg, toolsWithStatus)
+			if err != nil {
+				fmt.Printf("Error executing installations: %v\n", err)
+				return
+			}
+
+			displayInstallationResults(results)
 			return
 		}
-
-		displayInstallationResults(results)
 	},
+}
+
+func parseToolsToSelections(tools string, cfg config.Config) (tui.Selections, error) {
+	var sel tui.Selections
+	toolMap := toToolMap(tools)
+
+	for category, toolCfgs := range cfg.Categories {
+		var selected []string
+		for toolName := range toolCfgs {
+			if toolMap[toolName] {
+				selected = append(selected, toolName)
+			}
+		}
+		if len(selected) > 0 {
+			sel.CategoryAndTools = append(sel.CategoryAndTools, tui.CategoryAndTools{
+				Category: category,
+				Tools:    selected,
+			})
+		}
+	}
+	return sel, nil
+}
+
+func toToolMap(tools string) map[string]bool {
+	toolList := strings.Split(tools, ",")
+	toolMap := make(map[string]bool)
+	for _, t := range toolList {
+		trimmed := strings.TrimSpace(t)
+		if trimmed != "" {
+			toolMap[trimmed] = true
+		}
+	}
+	return toolMap
 }
 
 func Execute() error {
@@ -208,5 +272,7 @@ func displayGuidance(successful, failed int) {
 }
 
 func init() {
+	installCmd.Flags().BoolVar(&nonInteractive, "non-interactive", false, "Run installation without TUI (requires --tools)")
+	installCmd.Flags().StringVar(&toolsList, "tools", "", "Comma-separated list of tools to install (used with --non-interactive)")
 	rootCmd.AddCommand(installCmd)
 }
