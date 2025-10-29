@@ -15,6 +15,20 @@ installing development tools with minimal default configurations.
 - Maintain consistent configuration path interfaces
 - Operate statelessly without persistent installation tracking
 
+### 1.2 Usage
+
+```bash
+./devenv --help
+./devenv status
+./devenv install
+```
+
+![Example Status Overview](screenshots/example-status-overview.png)
+
+![Example Install TUI](screenshots/example-install-tui.png)
+
+![Example Install Output](screenshots/example-install-output.png)
+
 ## 2. System Requirements
 
 ### 2.1 Supported Environments
@@ -65,8 +79,9 @@ devenv/
 
 ### Setup
 
-- `mise install-deps` - Install all dependencies
 - `mise trust` - Trust the mise configuration file (required first time)
+- `mise install` - Install required tools
+- `mise install-deps` - Install all dependencies
 
 ### Go Development
 
